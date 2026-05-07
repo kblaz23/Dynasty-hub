@@ -921,7 +921,11 @@ function buildRoster(){
   // Roster table
   html+=`<div class="card">`;
   sections.forEach(s=>{
-    const players=t.roster.filter(p=>p.type===s.type);
+    const posOrd={QB:0,RB:1,WR:2,TE:3,K:4,WRT:5,BN:6,TX:7};
+    const getPos=p=>p.pos||p.slot||'BN';
+    const filtered=t.roster.filter(p=>p.type===s.type);
+    // Keep starters in Sleeper order, sort bench/taxi by position
+    const players=s.type==='starter'?filtered:filtered.sort((a,b)=>(posOrd[getPos(a)]||5)-(posOrd[getPos(b)]||5));
     if(!players.length)return;
     html+=`<div class="pos-hd">${s.label}</div>`;
     players.forEach(p=>{
@@ -1446,7 +1450,7 @@ async function loadLiveRosters() {
     rosters.forEach(r => {
       (r.players || []).forEach(id => allIds.add(id));
     });
-    const idList = Array.from(allIds).filter(id => !isNaN(id)); // exclude DEF etc
+    const idList = Array.from(allIds).filter(id => id && id !== '0' && !['DEF','K'].includes(id.length > 3 ? '' : id)); // include all player IDs
 
     // Step 3: Fetch player details for only these IDs
     // Use Sleeper's trending/search to get specific players
