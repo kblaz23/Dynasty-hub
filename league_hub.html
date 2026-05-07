@@ -1433,6 +1433,99 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // ==================== END SLEEPER API ====================
 
+
+// ==================== LIVE ROSTER SYSTEM ====================
+async function loadLiveRosters() {
+  try {
+    // Step 1: Get all rosters (player IDs per team)
+    const rosters = await sleeperFetch('/league/' + LEAGUE_ID + '/rosters');
+    if (!rosters) return;
+
+    // Step 2: Collect all unique player IDs across all rosters
+    const allIds = new Set();
+    rosters.forEach(r => {
+      (r.players || []).forEach(id => allIds.add(id));
+    });
+    const idList = Array.from(allIds).filter(id => !isNaN(id)); // exclude DEF etc
+
+    // Step 3: Fetch player details for only these IDs
+    // Use Sleeper's trending/search to get specific players
+    // Actually fetch the full players file but only keep what we need
+    const playersRes = await sleeperFetch('/players/nfl');
+    if (!playersRes) return;
+
+    // Build a lean lookup: id -> {name, pos, team}
+    const lookup = {};
+    idList.forEach(id => {
+      const p = playersRes[id];
+      if (p) {
+        lookup[id] = {
+          name: p.full_name || (p.first_name + ' ' + p.last_name),
+          pos: p.position || 'BN',
+          team: p.team || 'FA',
+          age: p.age || 0,
+        };
+      }
+    });
+
+    // Step 4: Update each team's roster display
+    rosters.forEach(r => {
+      const teamId = ROSTER_MAP[r.roster_id];
+      const team = TEAMS.find(t => t.id === teamId);
+      if (!team) return;
+
+      // Update W-L record
+      if (r.settings) {
+        team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+      }
+
+      // Build live roster from player IDs
+      const liveRoster = [];
+      const starters = new Set(r.starters || []);
+      const taxi = new Set(r.taxi || []);
+
+      (r.players || []).forEach(id => {
+        const p = lookup[id];
+        if (!p) return;
+        let slot = p.pos;
+        if (taxi.has(id)) slot = 'TX';
+        else if (!starters.has(id)) slot = 'BN';
+        liveRoster.push({
+          slot: slot,
+          name: p.name,
+          nfl: p.team,
+          age: p.age,
+          value: 0,
+          type: taxi.has(id) ? 'taxi' : starters.has(id) ? 'starter' : 'bench'
+        });
+      });
+
+      if (liveRoster.length > 0) {
+        team.roster = liveRoster;
+        team.liveRosterLoaded = true;
+      }
+    });
+
+    // Step 5: Re-render current roster view if on rosters tab
+    const activeTeam = document.querySelector('.team-btn.active');
+    if (activeTeam) {
+      selectTeam(activeTeam.dataset.id);
+    }
+
+    console.log('Live rosters loaded from Sleeper');
+  } catch(e) {
+    // Silent fail - use static roster data
+  }
+}
+
+// Call after main Sleeper load
+const _origLoad = loadSleeperData;
+loadSleeperData = async function() {
+  await _origLoad();
+  await loadLiveRosters();
+};
+// ==================== END LIVE ROSTER SYSTEM ====================
+
 </script>
 
 <!-- BADGE MODAL -->
