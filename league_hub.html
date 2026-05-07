@@ -278,6 +278,28 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .tl-card-gray{border-color:var(–border);color:var(–text-dim);}
 .tl-card-label{font-family:‘DM Mono’,monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:2px;opacity:0.6;}
 .tl-spacer{height:8px;}
+
+/* ===== MANAGER PROFILE CARDS ===== */
+.profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.profile-overlay.open{opacity:1;pointer-events:all;}
+.profile-card{background:var(–surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative;border-top:2px solid var(–border);}
+.profile-overlay.open .profile-card{transform:translateY(0);}
+.profile-close{position:absolute;top:12px;right:16px;font-size:22px;color:var(–text-dim);cursor:pointer;background:none;border:none;padding:4px 8px;}
+.profile-drag{width:40px;height:4px;background:var(–border);border-radius:2px;margin:0 auto 16px;}
+.profile-top{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(–gold);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(–surface2);}
+.profile-info{flex:1;min-width:0;}
+.profile-name{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:0.04em;color:var(–gold2);line-height:1;}
+.profile-handle{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text-dim);margin-top:2px;}
+.profile-tagline{font-size:12px;color:var(–text-muted);font-style:italic;margin:10px 0;line-height:1.5;border-left:2px solid var(–gold-dim);padding-left:10px;}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.profile-stat{background:var(–bg);border-radius:8px;padding:8px;text-align:center;}
+.profile-stat-num{font-family:‘Bebas Neue’,sans-serif;font-size:20px;color:var(–gold);line-height:1;}
+.profile-stat-lbl{font-family:‘DM Mono’,monospace;font-size:7px;color:var(–text-dim);letter-spacing:0.1em;margin-top:2px;}
+.profile-style{display:flex;align-items:center;gap:6px;margin:10px 0;}
+.profile-style-tag{font-family:‘DM Mono’,monospace;font-size:8px;padding:3px 8px;border-radius:4px;letter-spacing:0.08em;}
+.profile-sig{font-size:11px;color:var(–text-muted);margin-top:10px;line-height:1.5;}
+.profile-sig-label{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text-dim);letter-spacing:0.1em;margin-bottom:3px;}
 </style>
 
 <style>
@@ -841,7 +863,7 @@ function buildHome(){
   const trendLabel={up:'↑ Rising',flat:'→ Steady',steady:'→ Steady',down:'↓ Declining'};
   const trendClass={up:'tg-up',flat:'tg-flat',steady:'tg-flat',down:'tg-dn'};
   document.getElementById('pwrList').innerHTML=TEAMS.map(t=>`
-    <div class="pwr-card rk${t.rank}" onclick="go('rosters');selectTeam('${t.id}')">
+    <div class="pwr-card rk${t.rank}" onclick="go('rosters');selectTeam('${t.id}')" ondblclick="openProfile('${t.id}')">
       <div class="pwr-rk ${t.rank<=3?'top':''}">${t.rank}</div>
       ${logo(t.id,42)}
       <div class="pwr-info">
@@ -864,7 +886,7 @@ function buildHome(){
 let activeTeam='sandy';
 function buildTeamSel(){
   document.getElementById('teamSel').innerHTML=TEAMS.map(t=>`
-    <button class="team-btn ${t.id===activeTeam?'active':''}" onclick="selectTeam('${t.id}')">${t.name.split(' ').slice(0,2).join(' ')}</button>
+    <button class="team-btn ${t.id===activeTeam?'active':''}" onclick="selectTeam('${t.id}')" ondblclick="openProfile('${t.id}')">${t.name.split(' ').slice(0,2).join(' ')}</button>
   `).join('')+'';
 }
 function selectTeam(id){activeTeam=id;buildTeamSel();buildRoster();}
@@ -876,7 +898,8 @@ function buildRoster(){
   const ageColor=a=>a<=23?'var(--accent)':a<=27?'var(--text)':a<=30?'var(--gold)':'var(--red)';
   const sections=[{label:'STARTERS',type:'starter'},{label:'BENCH',type:'bench'},{label:'TAXI SQUAD',type:'taxi'}];
   let html=`
-    <div class="roster-hd">
+    <div class="roster-hd" style="position:relative;">
+      <button onclick="openProfile('${t.id}')" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;padding:4px;" title="Manager Profile"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#c8a800" stroke="#c8a800" stroke-width="1" stroke-linejoin="round"/></svg></button>
       ${logo(t.id,54)}
       <div style="flex:1;min-width:0;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
@@ -921,11 +944,7 @@ function buildRoster(){
   // Roster table
   html+=`<div class="card">`;
   sections.forEach(s=>{
-    const posOrd={QB:0,RB:1,WR:2,TE:3,K:4,WRT:5,BN:6,TX:7};
-    const getPos=p=>p.pos||p.slot||'BN';
-    const filtered=t.roster.filter(p=>p.type===s.type);
-    // Keep starters in Sleeper order, sort bench/taxi by position
-    const players=s.type==='starter'?filtered:filtered.sort((a,b)=>(posOrd[getPos(a)]||5)-(posOrd[getPos(b)]||5));
+    const players=t.roster.filter(p=>p.type===s.type);
     if(!players.length)return;
     html+=`<div class="pos-hd">${s.label}</div>`;
     players.forEach(p=>{
@@ -1438,104 +1457,130 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== END SLEEPER API ====================
 
 
-// ==================== LIVE ROSTER SYSTEM ====================
-async function loadLiveRosters() {
-  try {
-    // Step 1: Get all rosters (player IDs per team)
-    const rosters = await sleeperFetch('/league/' + LEAGUE_ID + '/rosters');
-    if (!rosters) return;
 
-    // Step 2: Collect all unique player IDs across all rosters
-    const allIds = new Set();
-    rosters.forEach(r => {
-      (r.players || []).forEach(id => allIds.add(id));
-    });
-    const idList = Array.from(allIds).filter(id => id && id !== '0' && !['DEF','K'].includes(id.length > 3 ? '' : id)); // include all player IDs
 
-    // Step 3: Fetch player details for only these IDs
-    // Use Sleeper's trending/search to get specific players
-    // Actually fetch the full players file but only keep what we need
-    const playersRes = await sleeperFetch('/players/nfl');
-    if (!playersRes) return;
 
-    // Build a lean lookup: id -> {name, pos, team}
-    const lookup = {};
-    idList.forEach(id => {
-      const p = playersRes[id];
-      if (p) {
-        lookup[id] = {
-          name: p.full_name || (p.first_name + ' ' + p.last_name),
-          pos: p.position || 'BN',
-          team: p.team || 'FA',
-          age: p.age || 0,
-        };
-      }
-    });
+// ==================== MANAGER PROFILES ====================
+const MANAGER_PROFILES = {
+  sandy: {
+    tagline: "Won a championship and still won't let anyone forget it. Respect.",
+    style: "DYNASTY", styleColor: "bdg-gold",
+    sigMove: "Acquired Jeremiyah Love with the 1.01, then pulled off the Foursome to land CMC + Henry. Two RB1s. At the same time. In the same offseason.",
+    allTime: "20-6 (77%)",
+    champs: "1 Ring (2025)",
+    record25: "12-1",
+    playstyle: "WIN NOW"
+  },
+  lah: {
+    tagline: "Commissioner by title, chess master by nature. The league runs because of him and so does the competition.",
+    style: "DYNASTY", styleColor: "bdg-gold",
+    sigMove: "Flipped JT + Henry for MHJ + Price + Cook + picks + Lemon + Bey. Somehow got all of them. Still acting humble about it.",
+    allTime: "19-7 (73%)",
+    champs: "1 Ring (2024)",
+    record25: "8-5",
+    playstyle: "DYNASTY BUILDER"
+  },
+  miso: {
+    tagline: "Traded the future for Lamar and Chase. No regrets. No picks. No chill.",
+    style: "ALLIN", styleColor: "bdg-red",
+    sigMove: "Gave up 2027 + 2028 first round picks for Lamar Jackson. Either the greatest move in league history or the most expensive lesson.",
+    allTime: "13-13 (50%)",
+    champs: "0 Rings",
+    record25: "8-5",
+    playstyle: "WIN NOW"
+  },
+  amon: {
+    tagline: "Sold Lamar, bought a future. The most patient team in a league full of impulsive traders.",
+    style: "WARCHEST", styleColor: "bdg-blue",
+    sigMove: "Traded Lamar for two future first round picks then quietly built the best QB room in the league. The long game personified.",
+    allTime: "7-19 (27%)",
+    champs: "0 Rings",
+    record25: "5-8",
+    playstyle: "REBUILDING"
+  },
+  killacam: {
+    tagline: "Built the most stacked WR room in league history. Zero picks left to show for it. No regrets, apparently.",
+    style: "ALLIN", styleColor: "bdg-red",
+    sigMove: "Acquired Lamb + Jefferson + Nabers in one offseason. Traded every 2027 pick to do it. The window is 2026 or bust.",
+    allTime: "15-11 (58%)",
+    champs: "0 Rings",
+    record25: "9-4",
+    playstyle: "WIN NOW"
+  },
+  nflzey: {
+    tagline: "Showed up in Year 1, upset the No. 2 seed, and got here by autopicking a kicker. Legend behavior.",
+    style: "GIANTKILL", styleColor: "bdg-purple",
+    sigMove: "5-seed expansion team upsets killaCam in the first round of the playoffs. Year 1. Never been done before.",
+    allTime: "6-7 (46%)",
+    champs: "0 Rings",
+    record25: "6-7",
+    playstyle: "BUILDING"
+  },
+  otto: {
+    tagline: "Skipped the 2026 draft entirely. On purpose. Sitting on 12 picks and two elite rookies. Either a genius or very patient.",
+    style: "WARCHEST", styleColor: "bdg-blue",
+    sigMove: "Traded all 2026 draft capital for 12 future picks. Zero players drafted. Banked Jeanty, Hampton, and enough capital to rebuild the league twice.",
+    allTime: "3-10 (23%)",
+    champs: "0 Rings",
+    record25: "3-10",
+    playstyle: "REBUILDING"
+  },
+  abab: {
+    tagline: "Went 1-12 last year and still showed up to the draft. That's called character. Or stubbornness. Hard to tell.",
+    style: "FREEFALL", styleColor: "bdg-red",
+    sigMove: "Survived the worst season in league history and came back with Barkley, Jacobs, Rice, and McMillan. The bounce back arc is real.",
+    allTime: "8-18 (31%)",
+    champs: "0 Rings",
+    record25: "1-12",
+    playstyle: "BOUNCE BACK"
+  },
+};
 
-    // Step 4: Update each team's roster display
-    rosters.forEach(r => {
-      const teamId = ROSTER_MAP[r.roster_id];
-      const team = TEAMS.find(t => t.id === teamId);
-      if (!team) return;
+function openProfile(teamId) {
+  const t = TEAMS.find(x => x.id === teamId);
+  const p = MANAGER_PROFILES[teamId];
+  if (!t || !p) return;
 
-      // Update W-L record
-      if (r.settings) {
-        team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
-      }
+  // Avatar - use team logo
+  document.getElementById('profileAvatar').innerHTML = logo(teamId, 60);
+  document.getElementById('profileName').textContent = t.name;
+  document.getElementById('profileHandle').textContent = '@' + t.owner + ' · Dynasty Rank #' + ({sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7}[teamId] || '?') + ' of 8';
+  document.getElementById('profileTagline').textContent = p.tagline;
 
-      // Build live roster from player IDs
-      const liveRoster = [];
-      const starters = new Set(r.starters || []);
-      const taxi = new Set(r.taxi || []);
+  // Stats
+  var rec24 = t.record2024 ? '<div class="profile-stat"><div class="profile-stat-num">' + t.record2024 + '</div><div class="profile-stat-lbl">2024 RECORD</div></div>' : '';
+  document.getElementById('profileStats').innerHTML =
+    '<div class="profile-stat"><div class="profile-stat-num">' + p.allTime + '</div><div class="profile-stat-lbl">ALL TIME</div></div>' +
+    '<div class="profile-stat"><div class="profile-stat-num">' + p.record25 + '</div><div class="profile-stat-lbl">2025 RECORD</div></div>' +
+    rec24 +
+    '<div class="profile-stat"><div class="profile-stat-num" style="color:var(--gold)">' + p.champs + '</div><div class="profile-stat-lbl">HARDWARE</div></div>';
 
-      (r.players || []).forEach(id => {
-        const p = lookup[id];
-        if (!p) return;
-        let slot = p.pos;
-        if (taxi.has(id)) slot = 'TX';
-        else if (!starters.has(id)) slot = 'BN';
-        liveRoster.push({
-          slot: slot,
-          name: p.name,
-          nfl: p.team,
-          age: p.age,
-          value: 0,
-          type: taxi.has(id) ? 'taxi' : starters.has(id) ? 'starter' : 'bench'
-        });
-      });
+  // Play style
+  var dynRanks = {sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7};
+  document.getElementById('profileStyle').innerHTML =
+    '<span class="profile-style-tag tag ' + p.styleColor + '">' + p.playstyle + '</span>' +
+    '<span class="tag tg">' + t.ovr + ' OVR</span>' +
+    '<span class="tag tg">PWR #' + t.rank + '</span>' +
+    '<span class="tag tg">DYN #' + (dynRanks[teamId] || '?') + '</span>';
 
-      if (liveRoster.length > 0) {
-        // Sort by position order then by type (starter/bench/taxi)
-        const posOrder = {QB:0,RB:1,WR:2,TE:3,K:4,BN:5,TX:6};
-        const typeOrder = {starter:0,bench:1,taxi:2};
-        liveRoster.sort(function(a,b) {
-          if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
-          return (posOrder[a.pos] || 5) - (posOrder[b.pos] || 5);
-        });
-        team.roster = liveRoster;
-        team.liveRosterLoaded = true;
-      }
-    });
+  // Sig move
+  document.getElementById('profileSigText').textContent = p.sigMove;
 
-    // Step 5: Re-render current roster view if on rosters tab
-    const activeTeam = document.querySelector('.team-btn.active');
-    if (activeTeam) {
-      selectTeam(activeTeam.dataset.id);
-    }
+  // Badges
+  document.getElementById('profileBadges').innerHTML = renderBadges(teamId, 'normal');
 
-    console.log('Live rosters loaded from Sleeper');
-  } catch(e) {
-    // Silent fail - use static roster data
-  }
+  // Open overlay
+  document.getElementById('profileOverlay').classList.add('open');
 }
 
-// Call after main Sleeper load
-const _origLoad = loadSleeperData;
-loadSleeperData = async function() {
-  await _origLoad();
-  await loadLiveRosters();
-};
-// ==================== END LIVE ROSTER SYSTEM ====================
+function closeProfileCard() {
+  document.getElementById('profileOverlay').classList.remove('open');
+}
+
+function closeProfile(e) {
+  if (e.target === document.getElementById('profileOverlay')) closeProfileCard();
+}
+// ==================== END MANAGER PROFILES ====================
 
 </script>
 
@@ -1573,5 +1618,28 @@ loadSleeperData = async function() {
   <div class="notif-feed" id="notifFeed"></div>
 </div>
 
+<!-- MANAGER PROFILE OVERLAY -->
+
+<div class="profile-overlay" id="profileOverlay" onclick="closeProfile(event)">
+  <div class="profile-card" id="profileCard">
+    <div class="profile-drag"></div>
+    <button class="profile-close" onclick="closeProfileCard()">✕</button>
+    <div class="profile-top">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div class="profile-info">
+        <div class="profile-name" id="profileName"></div>
+        <div class="profile-handle" id="profileHandle"></div>
+      </div>
+    </div>
+    <div class="profile-tagline" id="profileTagline"></div>
+    <div class="profile-stats" id="profileStats"></div>
+    <div class="profile-style" id="profileStyle"></div>
+    <div id="profileSig">
+      <div class="profile-sig-label">SIGNATURE MOVE</div>
+      <div class="profile-sig" id="profileSigText"></div>
+    </div>
+    <div style="margin-top:12px" id="profileBadges"></div>
+  </div>
+</div>
 </body>
 </html>
