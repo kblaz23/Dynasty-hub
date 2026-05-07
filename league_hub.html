@@ -1501,6 +1501,13 @@ async function loadLiveRosters() {
       });
 
       if (liveRoster.length > 0) {
+        // Sort by position order then by type (starter/bench/taxi)
+        const posOrder = {QB:0,RB:1,WR:2,TE:3,K:4,BN:5,TX:6};
+        const typeOrder = {starter:0,bench:1,taxi:2};
+        liveRoster.sort(function(a,b) {
+          if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
+          return (posOrder[a.pos] || 5) - (posOrder[b.pos] || 5);
+        });
         team.roster = liveRoster;
         team.liveRosterLoaded = true;
       }
