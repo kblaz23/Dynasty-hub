@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -187,48 +186,50 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 @keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
 @media(max-width:480px){.picks-grid{grid-template-columns:1fr;}.score-grid{grid-template-columns:1fr;}.roast-sel{grid-template-columns:1fr;}.stats-strip{grid-template-columns:repeat(2,1fr);}}
 
+
 .badge:hover .badge-tooltip{display:block;}
+
 
 /* ===== BADGE MODAL ===== */
 .badge-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;backdrop-filter:blur(4px);padding:20px 16px;overflow-y:auto;}
 .badge-modal-overlay.open{display:block;}
 .badge-modal{background:#12122a;border:1px solid #2a2a45;border-radius:16px;max-width:500px;margin:0 auto;overflow:hidden;}
 .badge-modal-header{padding:16px 18px;border-bottom:1px solid #2a2a45;display:flex;align-items:center;justify-content:space-between;}
-.badge-modal-title{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:0.08em;color:#ffd700;}
+.badge-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.08em;color:#ffd700;}
 .badge-modal-close{background:none;border:none;color:#7070a0;font-size:22px;cursor:pointer;padding:0;line-height:1;}
 .badge-modal-close:hover{color:#e8e8f5;}
-.badge-group-title{font-family:‘DM Mono’,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:10px 16px 5px;color:#7070a0;}
+.badge-group-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:10px 16px 5px;color:#7070a0;}
 .badge-modal-row{display:flex;align-items:flex-start;gap:10px;padding:8px 16px;border-bottom:1px solid rgba(42,42,69,0.5);}
 .badge-modal-row:last-child{border-bottom:none;}
 .badge-modal-name{min-width:110px;flex-shrink:0;}
-.badge-modal-desc{font-size:11px;color:#9090b0;line-height:1.5;font-family:‘Barlow Condensed’,sans-serif;font-weight:600;}
+.badge-modal-desc{font-size:11px;color:#9090b0;line-height:1.5;font-family:'Barlow Condensed',sans-serif;font-weight:600;}
 
 /* Badge click popup */
 .badge-popup{display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#12122a;border:1px solid #2a2a45;border-radius:10px;padding:10px 14px;max-width:260px;width:90%;z-index:3000;box-shadow:0 8px 32px rgba(0,0,0,0.8);text-align:center;}
 .badge-popup.show{display:block;animation:popIn 0.2s ease;}
 @keyframes popIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
-.badge-popup-name{font-family:‘Bebas Neue’,sans-serif;font-size:18px;letter-spacing:0.06em;margin-bottom:4px;}
-.badge-popup-desc{font-family:‘Barlow Condensed’,sans-serif;font-size:13px;font-weight:600;color:#9090b0;line-height:1.5;}
+.badge-popup-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.06em;margin-bottom:4px;}
+.badge-popup-desc{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;color:#9090b0;line-height:1.5;}
 
 /* Question mark button */
-.glossary-btn{background:none;border:1px solid #2a2a45;border-radius:50%;width:22px;height:22px;color:#7070a0;font-family:‘DM Mono’,monospace;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:8px;vertical-align:middle;transition:all 0.15s;}
+.glossary-btn{background:none;border:1px solid #2a2a45;border-radius:50%;width:22px;height:22px;color:#7070a0;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:8px;vertical-align:middle;transition:all 0.15s;}
 .glossary-btn:hover{border-color:#ffd700;color:#ffd700;}
 
 /* ===== WHATS HAPPENING ===== */
 .notif-btn{position:relative;background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;}
-.notif-icon{width:22px;height:22px;color:var(–gold);transition:color 0.2s;}
-.notif-icon:hover{color:var(–gold2);}
-.notif-dot{position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(–red);border:2px solid var(–bg);animation:pulse 2s infinite;}
-.notif-panel{position:fixed;top:0;right:-100%;width:min(340px,92vw);height:100vh;background:#0e0e1e;border-left:1px solid var(–border);z-index:5000;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.notif-icon{width:22px;height:22px;color:var(--gold);transition:color 0.2s;}
+.notif-icon:hover{color:var(--gold2);}
+.notif-dot{position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--bg);animation:pulse 2s infinite;}
+.notif-panel{position:fixed;top:0;right:-100%;width:min(340px,92vw);height:100vh;background:#0e0e1e;border-left:1px solid var(--border);z-index:5000;transition:right 0.3s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;display:flex;flex-direction:column;}
 .notif-panel.open{right:0;}
 .notif-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:4999;display:none;backdrop-filter:blur(2px);}
 .notif-overlay.open{display:block;}
-.notif-header{padding:16px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;background:#0e0e1e;position:sticky;top:0;z-index:1;}
-.notif-title{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:0.08em;color:var(–gold2);}
-.notif-close{background:none;border:none;color:var(–text-dim);font-size:20px;cursor:pointer;padding:4px;line-height:1;}
-.notif-close:hover{color:var(–text);}
+.notif-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#0e0e1e;position:sticky;top:0;z-index:1;}
+.notif-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.08em;color:var(--gold2);}
+.notif-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;padding:4px;line-height:1;}
+.notif-close:hover{color:var(--text);}
 .notif-feed{padding:0 12px 20px;flex:1;}
-.notif-section-title{font-family:‘DM Mono’,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(–text-dim);padding:12px 0 6px;border-bottom:1px solid var(–border);margin-bottom:8px;}
+.notif-section-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);padding:12px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px;}
 .notif-item{padding:10px 0;border-bottom:1px solid rgba(42,42,69,0.5);display:flex;gap:10px;align-items:flex-start;}
 .notif-item:last-child{border-bottom:none;}
 .notif-item-icon{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
@@ -238,70 +239,69 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .ni-rank{background:rgba(200,255,0,0.08);}
 .ni-news{background:rgba(192,128,255,0.1);}
 .notif-item-body{flex:1;min-width:0;}
-.notif-item-title{font-size:13px;font-weight:700;color:var(–text);line-height:1.3;}
-.notif-item-sub{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text-dim);margin-top:3px;}
-.notif-item-time{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text-muted);margin-top:2px;}
-.notif-grade{font-family:‘Bebas Neue’,sans-serif;font-size:16px;flex-shrink:0;margin-top:2px;}
-.notif-empty{text-align:center;padding:40px 20px;color:var(–text-dim);font-family:‘DM Mono’,monospace;font-size:11px;line-height:1.8;}
-.notif-count{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text-dim);padding:8px 0 4px;letter-spacing:0.1em;}
+.notif-item-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.notif-item-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:3px;}
+.notif-item-time{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:2px;}
+.notif-grade{font-family:'Bebas Neue',sans-serif;font-size:16px;flex-shrink:0;margin-top:2px;}
+.notif-empty{text-align:center;padding:40px 20px;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;line-height:1.8;}
+.notif-count{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);padding:8px 0 4px;letter-spacing:0.1em;}
 
 /* ===== SEASON COUNTDOWN ===== */
-.countdown-wrap{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;}
-.countdown-label{font-family:‘DM Mono’,monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(–text-dim);margin-bottom:5px;}
+.countdown-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;}
+.countdown-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;}
 .countdown-units{display:flex;justify-content:center;gap:0;align-items:flex-end;}
 .countdown-unit{flex:1;max-width:55px;}
-.countdown-num{font-family:‘Bebas Neue’,sans-serif;font-size:clamp(22px,6vw,30px);line-height:1;color:var(–gold);letter-spacing:0.02em;}
-.countdown-unit-label{font-family:‘DM Mono’,monospace;font-size:7px;color:var(–text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:1px;}
-.countdown-divider{font-family:‘Bebas Neue’,sans-serif;font-size:22px;color:var(–border);padding:0 2px;line-height:1.2;align-self:flex-start;margin-top:3px;}
-.countdown-sub{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text-dim);margin-top:5px;letter-spacing:0.08em;}
-.countdown-live{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(–red);margin-right:4px;animation:pulse 1.5s infinite;vertical-align:middle;}
+.countdown-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,6vw,30px);line-height:1;color:var(--gold);letter-spacing:0.02em;}
+.countdown-unit-label{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:1px;}
+.countdown-divider{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--border);padding:0 2px;line-height:1.2;align-self:flex-start;margin-top:3px;}
+.countdown-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);margin-top:5px;letter-spacing:0.08em;}
+.countdown-live{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--red);margin-right:4px;animation:pulse 1.5s infinite;vertical-align:middle;}
 
 /* ===== DYNASTY TIMELINE ===== */
 .timeline{position:relative;padding:0 0 16px;}
-.timeline-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(–gold),var(–border),transparent);transform:translateX(-50%);}
+.timeline-line{position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),var(--border),transparent);transform:translateX(-50%);}
 .tl-year{display:flex;align-items:center;justify-content:center;margin-bottom:4px;position:relative;z-index:1;}
-.tl-year-badge{background:var(–gold);color:var(–bg);font-family:‘Bebas Neue’,sans-serif;font-size:15px;letter-spacing:0.1em;padding:3px 14px;border-radius:20px;}
+.tl-year-badge{background:var(--gold);color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:0.1em;padding:3px 14px;border-radius:20px;}
 .tl-row{display:grid;grid-template-columns:1fr 24px 1fr;gap:0 8px;margin-bottom:6px;align-items:start;}
 .tl-left{text-align:right;}
 .tl-right{text-align:left;}
 .tl-dot{width:10px;height:10px;border-radius:50%;margin:4px auto 0;flex-shrink:0;}
-.tl-dot-gold{background:var(–gold);box-shadow:0 0 6px var(–gold);}
-.tl-dot-red{background:var(–red);box-shadow:0 0 6px var(–red);}
-.tl-dot-blue{background:var(–blue);box-shadow:0 0 6px var(–blue);}
+.tl-dot-gold{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+.tl-dot-red{background:var(--red);box-shadow:0 0 6px var(--red);}
+.tl-dot-blue{background:var(--blue);box-shadow:0 0 6px var(--blue);}
 .tl-dot-purple{background:#c080ff;box-shadow:0 0 6px #c080ff;}
-.tl-dot-gray{background:var(–border);}
-.tl-card{background:var(–surface);border-radius:8px;padding:7px 9px;font-size:11px;font-weight:700;line-height:1.4;border-left:2px solid;}
-.tl-card-gold{border-color:var(–gold);color:var(–text);}
-.tl-card-red{border-color:var(–red);color:var(–text);}
-.tl-card-blue{border-color:var(–blue);color:var(–text);}
-.tl-card-purple{border-color:#c080ff;color:var(–text);}
-.tl-card-gray{border-color:var(–border);color:var(–text-dim);}
-.tl-card-label{font-family:‘DM Mono’,monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:2px;opacity:0.6;}
+.tl-dot-gray{background:var(--border);}
+.tl-card{background:var(--surface);border-radius:8px;padding:7px 9px;font-size:11px;font-weight:700;line-height:1.4;border-left:2px solid;}
+.tl-card-gold{border-color:var(--gold);color:var(--text);}
+.tl-card-red{border-color:var(--red);color:var(--text);}
+.tl-card-blue{border-color:var(--blue);color:var(--text);}
+.tl-card-purple{border-color:#c080ff;color:var(--text);}
+.tl-card-gray{border-color:var(--border);color:var(--text-dim);}
+.tl-card-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:2px;opacity:0.6;}
 .tl-spacer{height:8px;}
 
 /* ===== MANAGER PROFILE CARDS ===== */
 .profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
 .profile-overlay.open{opacity:1;pointer-events:all;}
-.profile-card{background:var(–surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative;border-top:2px solid var(–border);}
+.profile-card{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 20px 40px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative;border-top:2px solid var(--border);}
 .profile-overlay.open .profile-card{transform:translateY(0);}
-.profile-close{position:absolute;top:12px;right:16px;font-size:22px;color:var(–text-dim);cursor:pointer;background:none;border:none;padding:4px 8px;}
-.profile-drag{width:40px;height:4px;background:var(–border);border-radius:2px;margin:0 auto 16px;}
+.profile-close{position:absolute;top:12px;right:16px;font-size:22px;color:var(--text-dim);cursor:pointer;background:none;border:none;padding:4px 8px;}
+.profile-drag{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
 .profile-top{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
-.profile-avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(–gold);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(–surface2);}
+.profile-avatar{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--surface2);}
 .profile-info{flex:1;min-width:0;}
-.profile-name{font-family:‘Bebas Neue’,sans-serif;font-size:22px;letter-spacing:0.04em;color:var(–gold2);line-height:1;}
-.profile-handle{font-family:‘DM Mono’,monospace;font-size:9px;color:var(–text-dim);margin-top:2px;}
-.profile-tagline{font-size:12px;color:var(–text-muted);font-style:italic;margin:10px 0;line-height:1.5;border-left:2px solid var(–gold-dim);padding-left:10px;}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.04em;color:var(--gold2);line-height:1;}
+.profile-handle{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;}
+.profile-tagline{font-size:12px;color:var(--text-muted);font-style:italic;margin:10px 0;line-height:1.5;border-left:2px solid var(--gold-dim);padding-left:10px;}
 .profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
-.profile-stat{background:var(–bg);border-radius:8px;padding:8px;text-align:center;}
-.profile-stat-num{font-family:‘Bebas Neue’,sans-serif;font-size:20px;color:var(–gold);line-height:1;}
-.profile-stat-lbl{font-family:‘DM Mono’,monospace;font-size:7px;color:var(–text-dim);letter-spacing:0.1em;margin-top:2px;}
+.profile-stat{background:var(--bg);border-radius:8px;padding:8px;text-align:center;}
+.profile-stat-num{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);line-height:1;}
+.profile-stat-lbl{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-dim);letter-spacing:0.1em;margin-top:2px;}
 .profile-style{display:flex;align-items:center;gap:6px;margin:10px 0;}
-.profile-style-tag{font-family:‘DM Mono’,monospace;font-size:8px;padding:3px 8px;border-radius:4px;letter-spacing:0.08em;}
-.profile-sig{font-size:11px;color:var(–text-muted);margin-top:10px;line-height:1.5;}
-.profile-sig-label{font-family:‘DM Mono’,monospace;font-size:8px;color:var(–text-dim);letter-spacing:0.1em;margin-bottom:3px;}
+.profile-style-tag{font-family:'DM Mono',monospace;font-size:8px;padding:3px 8px;border-radius:4px;letter-spacing:0.08em;}
+.profile-sig{font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;}
+.profile-sig-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:3px;}
 </style>
-
 <style>
 .bdg{display:inline-block;padding:3px 8px;border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.08em;position:relative;cursor:default;border-left:2px solid;}
 .bdg-gold{background:rgba(255,215,0,0.12);border-color:#ffd700;color:#ffd700;}
@@ -312,7 +312,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .bdg-gray{background:rgba(100,100,130,0.1);border-color:#6060a0;color:#9090c0;}
 .bdg{cursor:pointer;}
 </style>
-
 </head>
 <body>
 
@@ -344,7 +343,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 <div class="main">
 
 <!-- HOME -->
-
 <div class="tab-panel active" id="tab-home">
   <div id="countdownWrap"></div>
   <div class="stats-strip">
@@ -370,7 +368,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 </div>
 
 <!-- ROSTERS -->
-
 <div class="tab-panel" id="tab-rosters">
   <div class="sec-title">Team Rosters</div>
   <div class="sec-sub">Full PPR · 2QB · 3RB · 3WR · 1TE · 3 Flex · 1K</div>
@@ -379,13 +376,11 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 </div>
 
 <!-- HISTORY -->
-
 <div class="tab-panel" id="tab-history">
   <div class="sec-title">League History</div>
   <div class="sec-sub">3 Seasons · ESPN 2024 · Sleeper 2025–2026</div>
 
   <!-- ALL-TIME RECORDS -->
-
   <div class="card" style="margin-bottom:14px">
     <div class="card-hd"><span class="card-hd-t">🏅 All-Time Records (2024–2025)</span><span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">ORIGINAL 6 TEAMS ONLY FOR 2024</span></div>
     <table class="stbl">
@@ -464,113 +459,110 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     </table>
   </div>
 
-  <!-- DYNASTY TIMELINE -->
 
+  <!-- DYNASTY TIMELINE -->
   <div class="sec-title" style="font-size:20px;margin-bottom:4px;margin-top:4px;">Dynasty Timeline</div>
   <div class="sec-sub" style="margin-bottom:12px;">The story of Delinquent Dynasty III</div>
   <div class="timeline">
     <div class="timeline-line"></div>
 
-```
-<!-- 2024 -->
-<div class="tl-year"><span class="tl-year-badge">2024 · ESPN</span></div>
-<div class="tl-spacer"></div>
+    <!-- 2024 -->
+    <div class="tl-year"><span class="tl-year-badge">2024 · ESPN</span></div>
+    <div class="tl-spacer"></div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-gray"><div class="tl-card-label">Founded</div>Delinquent Dynasty III launches on ESPN. 6 teams, Full PPR, 2QB.</div></div>
-  <div><div class="tl-dot tl-dot-gray"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-gray"><div class="tl-card-label">Founded</div>Delinquent Dynasty III launches on ESPN. 6 teams, Full PPR, 2QB.</div></div>
+      <div><div class="tl-dot tl-dot-gray"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-gold"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-gold"><div class="tl-card-label">Champion</div>Lah Kynasty wins it all. 11-2, dominant wire-to-wire. The dynasty begins.</div></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-gold"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-gold"><div class="tl-card-label">Champion</div>Lah Kynasty wins it all. 11-2, dominant wire-to-wire. The dynasty begins.</div></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">Toilet Bowl</div>Amon Drugs finishes 2-11. Last place in league history. The crown begins here.</div></div>
-  <div><div class="tl-dot tl-dot-red"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">Toilet Bowl</div>Amon Drugs finishes 2-11. Last place in league history. The crown begins here.</div></div>
+      <div><div class="tl-dot tl-dot-red"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-blue"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-blue"><div class="tl-card-label">Runner Up</div>Sandy Hook &amp; Ladder falls in the finals. The rivalry is born.</div></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-blue"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-blue"><div class="tl-card-label">Runner Up</div>Sandy Hook &amp; Ladder falls in the finals. The rivalry is born.</div></div>
+    </div>
 
-<div class="tl-spacer"></div>
-<!-- 2025 -->
-<div class="tl-year"><span class="tl-year-badge">2025 · Sleeper</span></div>
-<div class="tl-spacer"></div>
+    <div class="tl-spacer"></div>
+    <!-- 2025 -->
+    <div class="tl-year"><span class="tl-year-badge">2025 · Sleeper</span></div>
+    <div class="tl-spacer"></div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-blue"><div class="tl-card-label">Expansion</div>League moves to Sleeper. NFL Zey and Ottomarion Empire join. 8 teams, $175 prize.</div></div>
-  <div><div class="tl-dot tl-dot-blue"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-blue"><div class="tl-card-label">Expansion</div>League moves to Sleeper. NFL Zey and Ottomarion Empire join. 8 teams, $175 prize.</div></div>
+      <div><div class="tl-dot tl-dot-blue"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-purple"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-purple"><div class="tl-card-label">Upset of the Year</div>NFL Zey (5-seed, expansion team, Year 1) upsets killaCam (#2 seed) in the first round of the playoffs.</div></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-purple"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-purple"><div class="tl-card-label">Upset of the Year</div>NFL Zey (5-seed, expansion team, Year 1) upsets killaCam (#2 seed) in the first round of the playoffs.</div></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">Toilet Bowl</div>Ababineaux goes 1-12. Worst record in league history. Toilet King confirmed.</div></div>
-  <div><div class="tl-dot tl-dot-red"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">Toilet Bowl</div>Ababineaux goes 1-12. Worst record in league history. Toilet King confirmed.</div></div>
+      <div><div class="tl-dot tl-dot-red"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-gold"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-gold"><div class="tl-card-label">Champion</div>Sandy Hook &amp; Ladder wins it all. 12-1, 433 pts in the finals. Revenge tour complete.</div></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-gold"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-gold"><div class="tl-card-label">Champion</div>Sandy Hook &amp; Ladder wins it all. 12-1, 433 pts in the finals. Revenge tour complete.</div></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-blue"><div class="tl-card-label">Runner Up</div>Lah Kynasty falls in the finals. Two title game appearances in two seasons. Back 2 Back threat.</div></div>
-  <div><div class="tl-dot tl-dot-blue"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-blue"><div class="tl-card-label">Runner Up</div>Lah Kynasty falls in the finals. Two title game appearances in two seasons. Back 2 Back threat.</div></div>
+      <div><div class="tl-dot tl-dot-blue"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-spacer"></div>
-<!-- 2026 -->
-<div class="tl-year"><span class="tl-year-badge">2026 · Season 3</span></div>
-<div class="tl-spacer"></div>
+    <div class="tl-spacer"></div>
+    <!-- 2026 -->
+    <div class="tl-year"><span class="tl-year-badge">2026 · Season 3</span></div>
+    <div class="tl-spacer"></div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">No 1st Picks</div>Both expansion teams enter Season 3 with zero 1st round picks. Otto traded all capital. Zey missed his pick to an autopick kicker.</div></div>
-  <div><div class="tl-dot tl-dot-red"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-red"><div class="tl-card-label">No 1st Picks</div>Both expansion teams enter Season 3 with zero 1st round picks. Otto traded all capital. Zey missed his pick to an autopick kicker.</div></div>
+      <div><div class="tl-dot tl-dot-red"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-purple"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-purple"><div class="tl-card-label">All In</div>MisoSawC trades 2027 + 2028 1st round picks for Lamar Jackson. Win now or bust.</div></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-purple"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-purple"><div class="tl-card-label">All In</div>MisoSawC trades 2027 + 2028 1st round picks for Lamar Jackson. Win now or bust.</div></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"><div class="tl-card tl-card-gold"><div class="tl-card-label">The Foursome</div>Otto had traded CMC to Sandy earlier in the offseason for capital — then CMC came right back to Sandy in the 4-team anyway. Sandy added Henry on top. killaCam parlayed their assets into Lamb + Jefferson + Nabers — the most stacked WR room ever assembled. Lah went from aging Henry to younger Cook, upgrading the RB room without losing a step. Four teams, one deal, everyone convinced they won. The wildest offseason in league history.</div></div>
-  <div><div class="tl-dot tl-dot-gold"></div></div>
-  <div class="tl-right"></div>
-</div>
+    <div class="tl-row">
+      <div class="tl-left"><div class="tl-card tl-card-gold"><div class="tl-card-label">The Foursome</div>Otto had traded CMC to Sandy earlier in the offseason for capital — then CMC came right back to Sandy in the 4-team anyway. Sandy added Henry on top. killaCam parlayed their assets into Lamb + Jefferson + Nabers — the most stacked WR room ever assembled. Lah went from aging Henry to younger Cook, upgrading the RB room without losing a step. Four teams, one deal, everyone convinced they won. The wildest offseason in league history.</div></div>
+      <div><div class="tl-dot tl-dot-gold"></div></div>
+      <div class="tl-right"></div>
+    </div>
 
-<div class="tl-row">
-  <div class="tl-left"></div>
-  <div><div class="tl-dot tl-dot-gray"></div></div>
-  <div class="tl-right"><div class="tl-card tl-card-gray"><div class="tl-card-label">To Be Written</div>Season 3 kicks off Sep 5, 2026. $175 on the line. Who writes their name in history?</div></div>
-</div>
-```
+    <div class="tl-row">
+      <div class="tl-left"></div>
+      <div><div class="tl-dot tl-dot-gray"></div></div>
+      <div class="tl-right"><div class="tl-card tl-card-gray"><div class="tl-card-label">To Be Written</div>Season 3 kicks off Sep 5, 2026. $175 on the line. Who writes their name in history?</div></div>
+    </div>
 
   </div>
 
 </div>
 
 <!-- CAPITAL -->
-
 <div class="tab-panel" id="tab-capital">
   <div class="sec-title">Draft Capital</div>
   <div class="sec-sub">2027–2029 Pick Inventory · All Teams</div>
@@ -585,7 +577,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 </div>
 
 <!-- 2027 SCOUT -->
-
 <div class="tab-panel" id="tab-scout">
   <div class="sec-title">2027 Rookie Scouting</div>
   <div class="sec-sub">Top 10 Dynasty Prospects · Full PPR · Updated May 2026</div>
@@ -608,10 +599,10 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
     <div style="font-size:11px;color:var(--text-dim);line-height:1.6">These rankings are pre-draft projections based on current college performance (May 2026). Things change — injuries, transfers, and breakout years all shift the dynasty landscape significantly. Rankings will update as the 2026 season progresses. Arch Manning's NFL draft decision is still pending.</div>
   </div>
 
+
 </div>
 
 <!-- TRADE CALCULATOR -->
-
 <div class="tab-panel" id="tab-calc">
   <div class="sec-title">Trade Calculator</div>
   <div class="sec-sub">Select teams · Add players · Compare value</div>
@@ -646,7 +637,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
   </div>
 
   <!-- Pick adders -->
-
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
     <div>
       <select id="calcSendPick" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;cursor:pointer;outline:none" onchange="calcAddPick('send')">
@@ -667,7 +657,6 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
   </div>
 
   <!-- Value meter -->
-
   <div class="card" style="margin-bottom:12px">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;text-align:center">
       <div style="padding:12px;border-right:1px solid var(--border)">
@@ -693,6 +682,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
   </div>
 
 </div>
+
 
 </div><!-- /main -->
 
@@ -1582,10 +1572,119 @@ function closeProfile(e) {
 }
 // ==================== END MANAGER PROFILES ====================
 
+
+// ==================== LIVE ROSTER SYSTEM v2 ====================
+// Roster slot order confirmed from Sleeper league settings
+const ROSTER_SLOTS = ["QB","QB","RB","RB","RB","WR","WR","WR","TE","WRT","WRT","WRT","K"];
+const BENCH_COUNT = 8; // BN slots
+
+async function loadLiveRosters() {
+  try {
+    const [rosters, playersDb] = await Promise.all([
+      sleeperFetch('/league/' + LEAGUE_ID + '/rosters'),
+      sleeperFetch('/players/nfl')
+    ]);
+    if (!rosters || !playersDb) return;
+
+    rosters.forEach(r => {
+      const teamId = ROSTER_MAP[r.roster_id];
+      const team = TEAMS.find(t => t.id === teamId);
+      if (!team) return;
+
+      // Update W-L record
+      if (r.settings) {
+        team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+      }
+
+      const taxiSet = new Set(r.taxi || []);
+      const starterIds = (r.starters || []).filter(id => id && id !== '0');
+      const allPlayerIds = r.players || [];
+
+      const liveRoster = [];
+
+      // Add starters in exact slot order
+      starterIds.forEach((id, idx) => {
+        const slot = ROSTER_SLOTS[idx] || 'BN';
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({
+          slot: slot,
+          name: p.full_name || (p.first_name + ' ' + p.last_name),
+          nfl: p.team || 'FA',
+          age: p.age || 0,
+          value: 0,
+          type: 'starter',
+          pos: pos
+        });
+      });
+
+      // Add taxi squad
+      taxiSet.forEach(id => {
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({
+          slot: 'TX',
+          name: p.full_name || (p.first_name + ' ' + p.last_name),
+          nfl: p.team || 'FA',
+          age: p.age || 0,
+          value: 0,
+          type: 'taxi',
+          pos: pos
+        });
+      });
+
+      // Add bench (non-starter, non-taxi)
+      const starterSet = new Set(starterIds);
+      allPlayerIds.forEach(id => {
+        if (starterSet.has(id) || taxiSet.has(id)) return;
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({
+          slot: 'BN',
+          name: p.full_name || (p.first_name + ' ' + p.last_name),
+          nfl: p.team || 'FA',
+          age: p.age || 0,
+          value: 0,
+          type: 'bench',
+          pos: pos
+        });
+      });
+
+      if (liveRoster.length > 0) {
+        team.roster = liveRoster;
+        team.liveRosterLoaded = true;
+      }
+    });
+
+    // Re-render active roster if on rosters tab
+    const activeBtn = document.querySelector('.team-btn.active');
+    if (activeBtn) selectTeam(activeBtn.dataset.id);
+
+  } catch(e) {
+    // Silent fail - keep static roster data
+  }
+}
+
+// Hook into main Sleeper load
+const _origSleeperLoad = loadSleeperData;
+loadSleeperData = async function() {
+  await _origSleeperLoad();
+  await loadLiveRosters();
+};
+// ==================== END LIVE ROSTER SYSTEM v2 ====================
+
 </script>
 
-<!-- BADGE MODAL -->
 
+
+
+<!-- BADGE MODAL -->
 <div class="badge-modal-overlay" id="badgeModal" onclick="closeBadgeModal(event)">
   <div class="badge-modal">
     <div class="badge-modal-header">
@@ -1597,19 +1696,17 @@ function closeProfile(e) {
 </div>
 
 <!-- BADGE CLICK POPUP -->
-
 <div class="badge-popup" id="badgePopup" onclick="this.classList.remove('show')">
   <div class="badge-popup-name" id="badgePopupName"></div>
   <div class="badge-popup-desc" id="badgePopupDesc"></div>
   <div style="font-family:'DM Mono',monospace;font-size:8px;color:#404060;margin-top:6px;letter-spacing:0.1em">TAP TO DISMISS</div>
 </div>
 
-<!-- WHATS HAPPENING OVERLAY -->
 
+<!-- WHATS HAPPENING OVERLAY -->
 <div class="notif-overlay" id="notifOverlay" onclick="closeNotif()"></div>
 
 <!-- WHATS HAPPENING PANEL -->
-
 <div class="notif-panel" id="notifPanel">
   <div class="notif-header">
     <span class="notif-title">What's Happening</span>
@@ -1618,8 +1715,8 @@ function closeProfile(e) {
   <div class="notif-feed" id="notifFeed"></div>
 </div>
 
-<!-- MANAGER PROFILE OVERLAY -->
 
+<!-- MANAGER PROFILE OVERLAY -->
 <div class="profile-overlay" id="profileOverlay" onclick="closeProfile(event)">
   <div class="profile-card" id="profileCard">
     <div class="profile-drag"></div>
