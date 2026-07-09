@@ -1199,7 +1199,10 @@ async function loadOwnershipHistory() {
 
   } catch(e) {
     console.log('loadOwnershipHistory error:', e.message, e.stack);
-  } {
+  }
+}
+
+function computeRosterIdentityBadges() {
   try {
     const teamIds = TEAMS.map(t => t.id);
 
