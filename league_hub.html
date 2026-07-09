@@ -987,6 +987,13 @@ const TEAM_ABBR = {
 
 let SLEEPER_LOADED = false;
 let OWNERSHIP_LOADED = false;
+let PLAYERS_DB_CACHE = null;
+
+async function getPlayersDb() {
+  if (PLAYERS_DB_CACHE) return PLAYERS_DB_CACHE;
+  PLAYERS_DB_CACHE = await sleeperFetch('/players/nfl');
+  return PLAYERS_DB_CACHE;
+}
 
 async function sleeperFetch(endpoint) {
   try {
@@ -1025,7 +1032,7 @@ async function loadLiveRosters() {
   try {
     const [rosters, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/rosters'),
-      sleeperFetch('/players/nfl')
+      getPlayersDb()
     ]);
     if (!rosters || !playersDb) return;
 
@@ -1121,7 +1128,7 @@ async function loadOwnershipHistory() {
       if (tx.drops) Object.keys(tx.drops).forEach(pid => recordOwnership(pid, tx.drops[pid]));
     });
 
-    const playersDb = await sleeperFetch('/players/nfl');
+    const playersDb = await getPlayersDb();
     if (!playersDb) { OWNERSHIP_LOADED = true; return; }
 
     function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
@@ -1233,7 +1240,7 @@ loadOwnershipHistory = async function() {
       .filter(tx => tx && tx.status === 'complete')
       .sort((a,b) => b.status_updated - a.status_updated);
 
-    const playersDb = await sleeperFetch('/players/nfl');
+    const playersDb = await getPlayersDb();
     if (!playersDb) return;
 
     function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
