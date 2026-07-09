@@ -1197,10 +1197,9 @@ async function loadOwnershipHistory() {
       console.log('Sample:', sample, JSON.stringify(window.OWNERSHIP_TX_DETAILS[sample][0]));
     }
 
-  } catch(e) {}
-}
-
-function computeRosterIdentityBadges() {
+  } catch(e) {
+    console.log('loadOwnershipHistory error:', e.message, e.stack);
+  } {
   try {
     const teamIds = TEAMS.map(t => t.id);
 
@@ -1632,4 +1631,3 @@ async function buildScoreboard() {
 </div>
 </body>
 </html>
-
