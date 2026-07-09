@@ -335,7 +335,7 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="go('home')">🏠 Home</button>
     <button class="nav-tab" onclick="go('rosters')">📋 Rosters</button>
-    <button class="nav-tab" onclick="go('calc')">🔄 Trade Calc</button>
+    <button class="nav-tab" onclick="go('calc')">🏈 Scoreboard</button>
     <button class="nav-tab" onclick="go('scout')">🔭 2027 Scout</button>
     <button class="nav-tab" onclick="go('history')">📜 History</button>
   </nav>
@@ -505,85 +505,73 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 
 </div>
 
-<!-- TRADE CALCULATOR -->
+<!-- SCOREBOARD -->
 <div class="tab-panel" id="tab-calc">
-  <div class="sec-title">Trade Calculator</div>
-  <div class="sec-sub">Select teams · Add players · Compare value</div>
+  <div class="sec-title">Scoreboard</div>
+  <div class="sec-sub" id="scoreWeekLabel">2026 Season · Week 1 · Sep 5 Kickoff</div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-    <!-- SEND SIDE -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-hd-t" style="color:var(--red)">📤 You Send</span>
-        <select id="calcSendTeam" onchange="calcLoadRoster('send')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;padding:4px 8px;cursor:pointer;outline:none;max-width:130px"></select>
-      </div>
-      <div style="padding:8px;max-height:180px;overflow-y:auto;scrollbar-width:thin" id="calcSendPool"></div>
-      <div id="calcSendNeeds"></div>
-      <div style="border-top:1px solid var(--border);padding:8px;min-height:70px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:5px">IN THIS TRADE</div>
-        <div id="calcSendBasket"><div style="color:var(--text-muted);font-size:11px;font-style:italic">Nothing added</div></div>
+  <div id="scoreboardContent">
+    <!-- Preseason placeholder -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="padding:20px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:0.05em;margin-bottom:6px">SEASON STARTS SEP 5</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:16px">WEEKLY MATCHUP PREVIEWS + PROJECTED SCORES COMING SOON</div>
+        <div id="scoreCountdown" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent)"></div>
       </div>
     </div>
-    <!-- RECEIVE SIDE -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-hd-t" style="color:var(--accent)">📥 You Get</span>
-        <select id="calcGetTeam" onchange="calcLoadRoster('get')" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;padding:4px 8px;cursor:pointer;outline:none;max-width:130px"></select>
-      </div>
-      <div style="padding:8px;max-height:180px;overflow-y:auto;scrollbar-width:thin" id="calcGetPool"></div>
-      <div id="calcGetNeeds"></div>
-      <div style="border-top:1px solid var(--border);padding:8px;min-height:70px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:5px">IN THIS TRADE</div>
-        <div id="calcGetBasket"><div style="color:var(--text-muted);font-size:11px;font-style:italic">Nothing added</div></div>
+
+    <!-- Matchup cards placeholder -->
+    <div id="matchupCards">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:0.15em;padding:8px 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px">WEEK 1 MATCHUPS · SEP 5 2026</div>
+      <div id="matchupList">
+
+        <div class="card" style="margin-bottom:10px">
+          <div style="padding:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px">MATCHUP 1</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">Lah Kynasty</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">LAH · PWR #2</div></div>
+              <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim)">VS</div>
+              <div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">Ababineaux</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">AB · PWR #6</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px">
+          <div style="padding:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px">MATCHUP 2</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">Sandy Hook</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">SHL · PWR #1</div></div>
+              <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim)">VS</div>
+              <div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">killaCam</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">KC · PWR #5</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px">
+          <div style="padding:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px">MATCHUP 3</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">Amon Drugs</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">AMON · PWR #4</div></div>
+              <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim)">VS</div>
+              <div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">NFL Zey</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">ZEY · PWR #7</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px">
+          <div style="padding:14px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px">MATCHUP 4</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">MisoSawC</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">MISO · PWR #3</div></div>
+              <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim)">VS</div>
+              <div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">Ottomarion</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim)">OTTO · PWR #8</div></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-
-  <!-- Pick adders -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-    <div>
-      <select id="calcSendPick" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;cursor:pointer;outline:none" onchange="calcAddPick('send')">
-        <option value="">+ Add pick (send)</option>
-        <option value="2027 1st|45">2027 1st Round</option><option value="2027 2nd|25">2027 2nd Round</option><option value="2027 3rd|12">2027 3rd Round</option>
-        <option value="2028 1st|38">2028 1st Round</option><option value="2028 2nd|20">2028 2nd Round</option><option value="2028 3rd|10">2028 3rd Round</option>
-        <option value="2029 1st|32">2029 1st Round</option><option value="2029 2nd|16">2029 2nd Round</option>
-      </select>
-    </div>
-    <div>
-      <select id="calcGetPick" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;padding:6px 8px;cursor:pointer;outline:none" onchange="calcAddPick('get')">
-        <option value="">+ Add pick (get)</option>
-        <option value="2027 1st|45">2027 1st Round</option><option value="2027 2nd|25">2027 2nd Round</option><option value="2027 3rd|12">2027 3rd Round</option>
-        <option value="2028 1st|38">2028 1st Round</option><option value="2028 2nd|20">2028 2nd Round</option><option value="2028 3rd|10">2028 3rd Round</option>
-        <option value="2029 1st|32">2029 1st Round</option><option value="2029 2nd|16">2029 2nd Round</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Value meter -->
-  <div class="card" style="margin-bottom:12px">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;text-align:center">
-      <div style="padding:12px;border-right:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-bottom:3px">YOU SEND</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red)" id="calcSendVal">0</div>
-      </div>
-      <div style="padding:12px;border-right:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-bottom:3px">DIFF</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px" id="calcDiff">—</div>
-      </div>
-      <div style="padding:12px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-bottom:3px">YOU GET</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent)" id="calcGetVal">0</div>
-      </div>
-    </div>
-    <div style="height:6px;background:var(--surface2);margin:0 12px 8px;border-radius:99px;overflow:hidden">
-      <div id="calcBarSend" style="height:100%;background:var(--red);border-radius:99px;width:0%;transition:width 0.3s"></div>
-    </div>
-    <div style="height:6px;background:var(--surface2);margin:0 12px 12px;border-radius:99px;overflow:hidden">
-      <div id="calcBarGet" style="height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width 0.3s"></div>
-    </div>
-    <div id="calcVerdict" style="margin:0 12px 12px;padding:8px 12px;border-radius:8px;background:var(--surface2);font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center">Add players to both sides to evaluate</div>
-  </div>
-
 </div>
 
 
@@ -707,7 +695,7 @@ function closeBadgeModal(e) {
 
 
 // ==================== ALL DATA ====================
-const TEAMS=[{id:'sandy',allTimeRecord:'20-6 (77%)',name:'Sandy Hook & Ladder',owner:'xbphill',rank:1,ovr:95,grade:'A+',trend:'up',record2024:'8-5',record2025:'12-1',champs:['2025'],posRanks:{QB:'#3',RB:'#2',WR:'#1',TE:'#1'},analysis:'Reigning champion and the most complete roster in the league. Nacua and JSN are the best WR duo in fantasy. Bowers and Warren make them the #1 TE room. CMC + Henry + Love + Chase Brown is the deepest RB room assembled. Mahomes and Daniels give elite QB flexibility. The only question is sustainability -- four of their top ten players are 29 or older.',dynastyNote:'Dynasty Rank #3. Wins now AND has a real future. JSN (24), Bowers (24), Warren (24), Love (22) are all young. The aging RB core -- CMC at 30 and Henry at 32 -- have limited runway. Light on capital at 8 picks but do not need to rebuild.',projection:'Championship favorite. Deepest roster in the league.',notes:'Reigning champ. CMC + Henry + Love at RB is the most stacked position group in league history.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Missing 2028 2nd — sent to Ottomarion in 4-team mega-trade.',roster:[{slot:'QB',name:'Patrick Mahomes',nfl:'KC',age:30,value:82,type:'starter'},{slot:'QB',name:'Jayden Daniels',nfl:'WAS',age:24,value:65,type:'starter'},{slot:'RB',name:'CMC',nfl:'SF',age:30,value:55,type:'starter'},{slot:'RB',name:'Derrick Henry',nfl:'BAL',age:32,value:38,type:'starter'},{slot:'RB',name:'Jeremiyah Love',nfl:'ARI',age:21,value:70,type:'starter'},{slot:'WR',name:'Puka Nacua',nfl:'LAR',age:24,value:44,type:'starter'},{slot:'WR',name:'JSN',nfl:'SEA',age:23,value:42,type:'starter'},{slot:'WR',name:'Jaylen Waddle',nfl:'DEN',age:26,value:40,type:'starter'},{slot:'TE',name:'Brock Bowers',nfl:'LV',age:22,value:70,type:'starter'},{slot:'WRT',name:'Chris Olave',nfl:'NO',age:25,value:36,type:'starter'},{slot:'WRT',name:'Chase Brown',nfl:'CIN',age:25,value:28,type:'starter'},{slot:'WRT',name:'Jonah Coleman',nfl:'DEN',age:22,value:18,type:'starter'},{slot:'K',name:'Jason Myers',nfl:'SEA',age:34,value:10,type:'starter'},{slot:'BN',name:'Trevor Lawrence',nfl:'JAX',age:26,value:40,type:'bench'},{slot:'BN',name:'Zach Charbonnet',nfl:'SEA',age:24,value:25,type:'bench'},{slot:'BN',name:'David Montgomery',nfl:'HOU',age:27,value:14,type:'bench'},{slot:'BN',name:'M. Pittman',nfl:'PIT',age:27,value:18,type:'bench'},{slot:'BN',name:'Zavion Thomas',nfl:'CHI',age:22,value:10,type:'bench'},{slot:'BN',name:'Tyler Warren',nfl:'IND',age:24,value:32,type:'bench'},{slot:'TX',name:'Fernando Mendoza',nfl:'LV',age:22,value:28,type:'taxi'},{slot:'TX',name:'Mike Washington',nfl:'LV',age:22,value:20,type:'taxi'},{slot:'TX',name:'Emmett Johnson',nfl:'KC',age:22,value:14,type:'taxi'}]},{id:'lah',allTimeRecord:'19-7 (73%)',name:'Lah Kynasty',owner:'LahKyak',rank:2,ovr:91,grade:'A',trend:'up',record2024:'11-2',record2025:'8-5',champs:['2024'],posRanks:{QB:'#2',RB:'#1',WR:'#5',TE:'#2'},analysis:'Back-to-back title game appearances. Flipped JT and Henry for Cook and MHJ, landed Jadarian Price with the 1.05, hit both draft targets in Lemon and Bey. Gibbs is the best RB in this league. Allen makes every roster decision easier. The WR room is deeper than rankings suggest -- five receivers under 25 with real upside.',dynastyNote:'Dynasty Rank #2. Best dynasty profile when factoring roster age vs capital. Gibbs (24), Judkins (23), Irving (24), MHJ (24), Odunze (24), Burden (23) -- the core is young and ascending. Ten picks banked. Allen has three more elite seasons minimum.',projection:'Title contender. Allen + Gibbs is the most reliable weekly floor in the league. If MHJ breaks out in Year 2, Lah becomes the clear #1 team.',notes:'Champ 2024, runner-up 2025. The offseason heist — sent JT + Watson + picks, landed MHJ + Price + future capital. Hit both draft targets in Lemon and Bey. Went from JT + Henry to Cook + MHJ — younger, cheaper, more explosive. Allen + Gibbs is the engine. The dynasty is just getting started.',picks:{'2027':['1st','2nd','3rd (Otto)','3rd (KC)'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Two extra 2027 3rds from Ottomarion (Rachaad White trade) & killaCam (JT deal).',roster:[{slot:'QB',name:'Josh Allen',nfl:'BUF',age:29,value:72,type:'starter'},{slot:'QB',name:'Brock Purdy',nfl:'SF',age:25,value:38,type:'starter'},{slot:'RB',name:'Jahmyr Gibbs',nfl:'DET',age:23,value:68,type:'starter'},{slot:'RB',name:'Bucky Irving',nfl:'TB',age:23,value:52,type:'starter'},{slot:'RB',name:'James Cook',nfl:'BUF',age:25,value:42,type:'starter'},{slot:'WR',name:'A.J. Brown',nfl:'PHI',age:27,value:58,type:'starter'},{slot:'WR',name:'Garrett Wilson',nfl:'NYJ',age:25,value:62,type:'starter'},{slot:'WR',name:'Marvin Harrison Jr',nfl:'ARI',age:23,value:70,type:'starter'},{slot:'TE',name:'Tucker Kraft',nfl:'GB',age:24,value:28,type:'starter'},{slot:'WRT',name:'Luther Burden',nfl:'CHI',age:22,value:18,type:'starter'},{slot:'WRT',name:'Makai Lemon',nfl:'PHI',age:21,value:38,type:'starter'},{slot:'WRT',name:'Quinshon Judkins',nfl:'CLE',age:21,value:30,type:'starter'},{slot:'K',name:'Cam Little',nfl:'JAX',age:22,value:10,type:'starter'},{slot:'BN',name:'Tyler Shough',nfl:'NO',age:25,value:14,type:'bench'},{slot:'BN',name:'Kyle Monangai',nfl:'CHI',age:23,value:14,type:'bench'},{slot:'BN',name:'Jadarian Price',nfl:'SEA',age:21,value:35,type:'bench'},{slot:'BN',name:'Rome Odunze',nfl:'CHI',age:23,value:36,type:'bench'},{slot:'BN',name:'Germie Bernard',nfl:'PIT',age:22,value:8,type:'bench'},{slot:'BN',name:'Mike Evans',nfl:'SF',age:31,value:22,type:'bench'},{slot:'BN',name:'Parker Washington',nfl:'JAX',age:23,value:10,type:'bench'},{slot:'BN',name:'George Kittle',nfl:'SF',age:24,value:22,type:'bench'},{slot:'TX',name:'Jonathon Brooks',nfl:'CAR',age:22,value:18,type:'taxi'},{slot:'TX',name:'Bhayshul Tuten',nfl:'JAX',age:23,value:16,type:'taxi'},{slot:'TX',name:'Kenyon Sadiq',nfl:'NYJ',age:22,value:30,type:'taxi'}]},{id:'miso',allTimeRecord:'13-13 (50%)',name:'MisoSawC',owner:'MisoSawC',rank:3,ovr:86,grade:'A-',trend:'up',record2024:'5-8',record2025:'8-5',champs:[],posRanks:{QB:'#4',RB:'#5',WR:'#3',TE:'#5'},analysis:'Chase and London are as dangerous a WR duo as exists in fantasy. Lamar makes every week must-start. Bijan is the RB1 in dynasty. The problem is they have no future picks -- traded two first rounders for Lamar and are all-in on 2026. If they win it was genius. If they do not, the rebuild starts from scratch.',dynastyNote:'Dynasty Rank #5. Zero 2027 or 2028 first round picks. Everything rides on 2026. Chase (26), London (25), Bijan (24) are young but the capital hole is real. One bad injury season and this roster collapses.',projection:'Must-win 2026. Loaded for a title run now. If they miss the next two championships, the Lamar trade becomes a regret.',notes:'Lamar + Bijan + Chase is as dangerous as it gets. Win-now or bust — no 2027/2028 1sts to fall back on.',picks:{'2027':['2nd','3rd'],'2028':['2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'No 2027 or 2028 1sts — both sent to Amon Drugs for Lamar Jackson.',roster:[{slot:'QB',name:'Lamar Jackson',nfl:'BAL',age:28,value:88,type:'starter'},{slot:'QB',name:'Sam Darnold',nfl:'SEA',age:28,value:22,type:'starter'},{slot:'RB',name:'Bijan Robinson',nfl:'ATL',age:24,value:78,type:'starter'},{slot:'RB',name:'Kenneth Walker',nfl:'KC',age:25,value:52,type:'starter'},{slot:'RB',name:'RJ Harvey',nfl:'DEN',age:23,value:30,type:'starter'},{slot:'WR',name:"Ja'Marr Chase",nfl:'CIN',age:25,value:95,type:'starter'},{slot:'WR',name:'Drake London',nfl:'ATL',age:24,value:56,type:'starter'},{slot:'WR',name:'Emeka Egbuka',nfl:'TB',age:23,value:48,type:'starter'},{slot:'TE',name:'Harold Fannin',nfl:'CLE',age:23,value:40,type:'starter'},{slot:'WRT',name:'DJ Moore',nfl:'BUF',age:28,value:28,type:'starter'},{slot:'WRT',name:'Carnell Tate',nfl:'TEN',age:21,value:42,type:'starter'},{slot:'WRT',name:'Jayden Reed',nfl:'GB',age:26,value:22,type:'starter'},{slot:'K',name:'Harrison Butker',nfl:'KC',age:30,value:10,type:'starter'},{slot:'BN',name:'Blake Corum',nfl:'LAR',age:24,value:18,type:'bench'},{slot:'BN',name:'Kaytron Allen',nfl:'WAS',age:21,value:15,type:'bench'},{slot:'BN',name:'Jalen Coker',nfl:'CAR',age:24,value:14,type:'bench'},{slot:'BN',name:'Oronde Gadsden',nfl:'LAC',age:25,value:18,type:'bench'},{slot:'TX',name:'Tez Johnson',nfl:'TB',age:23,value:12,type:'taxi'},{slot:'TX',name:'Malachi Fields',nfl:'NYG',age:22,value:14,type:'taxi'},{slot:'TX',name:'Chris Bell',nfl:'MIA',age:22,value:30,type:'taxi'},{slot:'BN',name:'Josh Downs',nfl:'IND',age:24,value:14,type:'bench'}]},{id:'amon',allTimeRecord:'7-19 (27%)',name:'Amon Drugs',owner:'JJ4SEVEN',rank:4,ovr:88,grade:'A',trend:'up',record2024:'2-11',record2025:'5-8',champs:[],posRanks:{QB:'#1',RB:'#8',WR:'#4',TE:'#3'},analysis:'Sold Lamar for two future firsts and quietly built the best QB room in the league. Maye and Hurts is an elite 2QB combo -- Maye at 24 is the highest-ceiling QB in this draft class. Eleven picks total. The WR room with ARSB and Collins is strong. The problem is the RB room -- Swift and committee backs will not win you weeks.',dynastyNote:'Dynasty Rank #4. Elite QB future, elite capital, weak RB room today. Maye (24) is the most valuable dynasty QB in this league. Eleven picks means every hole can be filled. A genuine contender in 2027-2028.',projection:'Best long-term outlook in the league. Could legitimately draft Jeremiah Smith AND Ryan Williams in 2027. Rebuilding the RIGHT way.',notes:'Sold Lamar for 2 future 1sts. 11 picks total. Young WR core + elite capital = dynasty superteam incoming.',picks:{'2027':['1st','1st (Miso)','2nd','3rd'],'2028':['1st','1st (Miso)','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Richest pick inventory (11 picks). Two MisoSawC 1sts from the Lamar trade.',roster:[{slot:'QB',name:'Drake Maye',nfl:'NE',age:23,value:72,type:'starter'},{slot:'QB',name:'Jalen Hurts',nfl:'PHI',age:27,value:75,type:'starter'},{slot:'RB',name:"D'Andre Swift",nfl:'CHI',age:26,value:32,type:'starter'},{slot:'RB',name:'Jaylen Warren',nfl:'PIT',age:26,value:22,type:'starter'},{slot:'RB',name:'Rhamondre Stevenson',nfl:'NE',age:27,value:20,type:'starter'},{slot:'WR',name:'ARSB',nfl:'DET',age:26,value:72,type:'starter'},{slot:'WR',name:'Nico Collins',nfl:'HOU',age:27,value:58,type:'starter'},{slot:'WR',name:'Jordyn Tyson',nfl:'NO',age:22,value:40,type:'starter'},{slot:'TE',name:'Trey McBride',nfl:'ARI',age:26,value:65,type:'starter'},{slot:'WRT',name:'Brian Thomas Jr',nfl:'JAX',age:23,value:52,type:'starter'},{slot:'WRT',name:'Xavier Worthy',nfl:'KC',age:22,value:32,type:'starter'},{slot:'WRT',name:'DK Metcalf',nfl:'PIT',age:28,value:30,type:'starter'},{slot:'K',name:'Chris Boswell',nfl:'PIT',age:33,value:10,type:'starter'},{slot:'BN',name:'Brian Robinson',nfl:'ATL',age:27,value:16,type:'bench'},{slot:'BN',name:'Isiah Pacheco',nfl:'DET',age:26,value:28,type:'bench'},{slot:'BN',name:'Tank Bigsby',nfl:'PHI',age:23,value:14,type:'bench'},{slot:'BN',name:'Ray Davis',nfl:'BUF',age:25,value:12,type:'bench'},{slot:'BN',name:'Quentin Johnston',nfl:'LAC',age:24,value:16,type:'bench'},{slot:'BN',name:'Dalton Kincaid',nfl:'BUF',age:26,value:18,type:'bench'},{slot:'BN',name:'Emanuel Wilson',nfl:'SEA',age:25,value:8,type:'bench'}]},{id:'killacam',allTimeRecord:'15-11 (58%)',name:'killaCam',owner:'cameronjones02',rank:5,ovr:87,grade:'A-',trend:'steady',record2024:'6-7',record2025:'9-4',champs:[],posRanks:{QB:'#7',RB:'#4',WR:'#2',TE:'#7'},capitalNote:'',analysis:'The most talented WR room ever assembled in this league -- Lamb, Jefferson, Nabers. Achane and Taylor make the RB room legitimate. The issues are real: zero 2027 picks, an aging QB situation, and Kelce hanging on at TE. This roster wins in 2026 or it does not win at all.',dynastyNote:'Dynasty Rank #6. Zero 2027 picks is a structural problem. Williams (25) is the only young piece at QB. Prescott at 33 will likely retire soon. The WR room buys time but the clock is ticking.',projection:'Win-now contender with elite talent. Zero 2027 picks means must win in 2026-2027. WR room alone makes them dangerous every week.',notes:'93 OVR on raw talent alone. C grade reflects zero 2027 picks + MHJ trade, not the roster itself — which is elite.',picks:{'2027':[],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'ZERO 2027 picks — 1st & 2nd to Ottomarion, 3rd to LahKyak.',roster:[{slot:'QB',name:'Caleb Williams',nfl:'CHI',age:23,value:62,type:'starter'},{slot:'QB',name:'Dak Prescott',nfl:'DAL',age:32,value:42,type:'starter'},{slot:'RB',name:'Jonathan Taylor',nfl:'IND',age:27,value:65,type:'starter'},{slot:'RB',name:"De'Von Achane",nfl:'MIA',age:23,value:68,type:'starter'},{slot:'RB',name:'Cam Skattebo',nfl:'NYG',age:23,value:32,type:'starter'},{slot:'WR',name:'Justin Jefferson',nfl:'MIN',age:26,value:92,type:'starter'},{slot:'WR',name:'Malik Nabers',nfl:'NYG',age:22,value:78,type:'starter'},{slot:'WR',name:'CeeDee Lamb',nfl:'DAL',age:26,value:85,type:'starter'},{slot:'TE',name:'Travis Kelce',nfl:'KC',age:36,value:38,type:'starter'},{slot:'WRT',name:'Terry McLaurin',nfl:'WAS',age:30,value:32,type:'starter'},{slot:'WRT',name:'Brandon Aiyuk',nfl:'FA',age:27,value:40,type:'starter'},{slot:'WRT',name:'Davante Adams',nfl:'LAR',age:33,value:28,type:'starter'},{slot:'K',name:'Cameron Dicker',nfl:'LAC',age:25,value:10,type:'starter'},{slot:'BN',name:'Kyler Murray',nfl:'MIN',age:28,value:35,type:'bench'},{slot:'BN',name:'Stefon Diggs',nfl:'FA',age:30,value:18,type:'bench'},{slot:'BN',name:'Jordan Mason',nfl:'MIN',age:26,value:14,type:'bench'},{slot:'BN',name:'Troy Franklin',nfl:'DEN',age:23,value:16,type:'bench'},{slot:'BN',name:'Ricky Pearsall',nfl:'SF',age:24,value:14,type:'bench'},{slot:'BN',name:'Omar Cooper',nfl:'NYJ',age:22,value:22,type:'bench'},{slot:'TX',name:'Shedeur Sanders',nfl:'CLE',age:23,value:28,type:'taxi'},{slot:'TX',name:"Ja'Kobi Lane",nfl:'BAL',age:22,value:14,type:'taxi'},{slot:'TX',name:'Denzel Boston',nfl:'CLE',age:22,value:20,type:'taxi'}]},{id:'nflzey',allTimeRecord:'6-7 (46%)',name:'NFL Zey',owner:'tracesheets',rank:6,ovr:81,grade:'B+',trend:'up',record2024:'N/A',record2025:'6-7',champs:[],posRanks:{QB:'#5',RB:'#7',WR:'#8',TE:'#6'},analysis:'Burrow and Herbert is a legitimate 2QB combo -- this room is underrated. Pickens is ascending. The RB room is thin beyond Breece Hall. Loveland at TE is a dynasty gem. Year 2 expansion team that showed everyone they belong with the playoff upset in Year 1.',dynastyNote:'Dynasty Rank #8. Thin roster talent base outside Burrow, Herbert, Pickens, and Loveland. Capital is there to fix it but requires patience. Year 3 is about building the foundation.',projection:'Year 2 ceiling is a playoff appearance. The QB room makes them competitive every week. 2027 draft class could be the turning point.',notes:'Expansion Yr 2. Better than their record shows. Burrow + Herbert + full pick slate heading into a loaded 2027 class.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Full clean slate — no picks traded away. Smart for an expansion team.',roster:[{slot:'QB',name:'Joe Burrow',nfl:'CIN',age:28,value:75,type:'starter'},{slot:'QB',name:'Justin Herbert',nfl:'LAC',age:27,value:62,type:'starter'},{slot:'RB',name:'Breece Hall',nfl:'NYJ',age:25,value:62,type:'starter'},{slot:'RB',name:'Rico Dowdle',nfl:'PIT',age:27,value:32,type:'starter'},{slot:'RB',name:'J. Croskey-Merritt',nfl:'WAS',age:22,value:22,type:'starter'},{slot:'WR',name:'George Pickens',nfl:'DAL',age:24,value:52,type:'starter'},{slot:'WR',name:'Tee Higgins',nfl:'CIN',age:27,value:48,type:'starter'},{slot:'WR',name:'DeVonta Smith',nfl:'PHI',age:29,value:50,type:'starter'},{slot:'TE',name:'AJ Barner',nfl:'SEA',age:23,value:28,type:'starter'},{slot:'WRT',name:'Chris Godwin',nfl:'TB',age:29,value:28,type:'starter'},{slot:'WRT',name:'Jordan Addison',nfl:'MIN',age:23,value:32,type:'starter'},{slot:'WRT',name:'Tyreek Hill',nfl:'FA',age:32,value:25,type:'starter'},{slot:'K',name:'Brandon Aubrey',nfl:'DAL',age:30,value:10,type:'starter'},{slot:'BN',name:'Matthew Stafford',nfl:'LAR',age:38,value:18,type:'bench'},{slot:'BN',name:'Aaron Jones',nfl:'MIN',age:31,value:15,type:'bench'},{slot:'BN',name:'Tyjae Spears',nfl:'TEN',age:24,value:18,type:'bench'},{slot:'BN',name:'Tank Dell',nfl:'HOU',age:26,value:20,type:'bench'},{slot:'BN',name:'Jauan Jennings',nfl:'FA',age:28,value:14,type:'bench'},{slot:'TX',name:'Colston Loveland',nfl:'CHI',age:22,value:32,type:'taxi'},{slot:'TX',name:'Cam Ward',nfl:'TEN',age:22,value:32,type:'taxi'},{slot:'TX',name:'KC Concepcion',nfl:'CLE',age:22,value:35,type:'taxi'}]},{id:'otto',allTimeRecord:'3-10 (23%)',name:'Ottomarion Empire',owner:'joshlazaroe',rank:7,ovr:82,grade:'B+',trend:'up',record2024:'N/A',record2025:'3-10',champs:[],posRanks:{QB:'#8',RB:'#3',WR:'#7',TE:'#4'},analysis:'The most confusing roster in the league to evaluate. Traded all 2026 draft capital and made zero picks -- but banked 12 future picks in return. Jeanty and Hampton are two of the best dynasty RBs in this class. Goff and Mayfield are stopgap QBs. Built for 2027-2028, not 2026.',dynastyNote:'Dynasty Rank #1. Twelve picks, two elite rookie RBs, roster built for the future. Otto skipped 2026 intentionally. If Jeanty and Hampton become what their dynasty profiles suggest, Otto wins a championship in 2028.',projection:'2027 breakout target. Expect another tough 2026 as QB room holds them back, but the draft capital + young RBs set up a monster future.',notes:'Expansion Yr 2. Played the long game perfectly. 12 picks including KC\'s 2027 1st. Young RBs + Travis Hunter taxi = future powerhouse.',picks:{'2027':['1st','1st (KC)','2nd (KC)','2nd','3rd (LK)'],'2028':['1st','2nd (Sandy)','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Most picks in league (12). Holding KC 2027 1st+2nd, LahKyak 2027 3rd, Sandy 2028 2nd.',roster:[{slot:'QB',name:'Jared Goff',nfl:'DET',age:32,value:32,type:'starter'},{slot:'QB',name:'Baker Mayfield',nfl:'TB',age:31,value:28,type:'starter'},{slot:'RB',name:'Ashton Jeanty',nfl:'LV',age:22,value:75,type:'starter'},{slot:'RB',name:'TreVeyon Henderson',nfl:'NE',age:24,value:42,type:'starter'},{slot:'RB',name:'Omarion Hampton',nfl:'LAC',age:21,value:38,type:'starter'},{slot:'WR',name:'Zay Flowers',nfl:'BAL',age:24,value:42,type:'starter'},{slot:'WR',name:'Jameson Williams',nfl:'DET',age:24,value:35,type:'starter'},{slot:'WR',name:'Jakobi Meyers',nfl:'JAX',age:29,value:16,type:'starter'},{slot:'TE',name:'Sam LaPorta',nfl:'DET',age:24,value:38,type:'starter'},{slot:'WRT',name:"Wan'Dale Robinson",nfl:'TEN',age:24,value:14,type:'starter'},{slot:'WRT',name:"De'Zhaun Stribling",nfl:'SF',age:23,value:12,type:'starter'},{slot:'WRT',name:'Rachaad White',nfl:'WAS',age:27,value:22,type:'starter'},{slot:'K',name:'Jake Bates',nfl:'DET',age:25,value:10,type:'starter'},{slot:'BN',name:'Kenneth Gainwell',nfl:'TB',age:26,value:10,type:'bench'},{slot:'BN',name:'Tyler Allgeier',nfl:'ARI',age:26,value:12,type:'bench'},{slot:'BN',name:'Romeo Doubs',nfl:'GB',age:25,value:16,type:'bench'},{slot:'BN',name:'Dallas Goedert',nfl:'PHI',age:30,value:20,type:'bench'},{slot:'TX',name:'Bryce Lance',nfl:'NO',age:22,value:10,type:'taxi'},{slot:'TX',name:'Travis Hunter',nfl:'JAX',age:21,value:38,type:'taxi'},{slot:'BN',name:'Jaxson Dart',nfl:'NYG',age:22,value:22,type:'bench'},{slot:'BN',name:'Kyle Pitts',nfl:'ATL',age:26,value:35,type:'bench'},{slot:'BN',name:'Tre Harris',nfl:'LAC',age:23,value:18,type:'bench'},{slot:'BN',name:'Eli Stowers',nfl:'PHI',age:22,value:10,type:'bench'},{slot:'TX',name:'Oscar Delp',nfl:'NO',age:23,value:15,type:'taxi'}]},{id:'abab',allTimeRecord:'8-18 (31%)',name:'Ababineaux',owner:'Ababineaux11',rank:8,ovr:85,grade:'A-',trend:'up',record2024:'7-6',record2025:'1-12',champs:[],posRanks:{QB:'#6',RB:'#6',WR:'#6',TE:'#8'},analysis:'Do not sleep on Ababineaux. The 1-12 season is in the past. Barkley and Jacobs is a legitimate RB1-RB2 combination. Rice and McMillan is a solid young WR core. The QB room with Love and Nix is serviceable. A legitimate bounce-back candidate -- the talent is there and the dynasty window is quietly opening.',dynastyNote:'Dynasty Rank #7. Roster skews older at key positions. Barkley (29), Jacobs (28), Sutton (31) have limited runway. The saving grace is McMillan (23) and Rice (26). Miss 2026 and the rebuild gets painful.',projection:'Projected playoff bubble. Better than the 2025 record suggests. If Saquon stays healthy and McMillan breaks out, they sneak into the playoffs.',notes:' King 2025 but don\'t sleep on them. All-veteran approach + clean picks + young WRs = legitimate bounce-back candidate.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Full clean slate — no picks traded away.',roster:[{slot:'QB',name:'Bo Nix',nfl:'DEN',age:25,value:42,type:'starter'},{slot:'QB',name:'Jordan Love',nfl:'GB',age:27,value:55,type:'starter'},{slot:'RB',name:'Saquon Barkley',nfl:'PHI',age:28,value:58,type:'starter'},{slot:'RB',name:'Josh Jacobs',nfl:'GB',age:27,value:32,type:'starter'},{slot:'RB',name:'Kyren Williams',nfl:'LAR',age:26,value:38,type:'starter'},{slot:'WR',name:'Rashee Rice',nfl:'KC',age:25,value:52,type:'starter'},{slot:'WR',name:'Tetairoa McMillan',nfl:'CAR',age:22,value:48,type:'starter'},{slot:'WR',name:'Ladd McConkey',nfl:'LAC',age:24,value:42,type:'starter'},{slot:'TE',name:'Mark Andrews',nfl:'BAL',age:30,value:38,type:'starter'},{slot:'WRT',name:'Travis Etienne',nfl:'NO',age:26,value:28,type:'starter'},{slot:'WRT',name:'Jayden Higgins',nfl:'HOU',age:22,value:22,type:'starter'},{slot:'WRT',name:'Matthew Golden',nfl:'GB',age:22,value:18,type:'starter'},{slot:'BN',name:'CJ Stroud',nfl:'HOU',age:24,value:38,type:'bench'},{slot:'BN',name:'Chuba Hubbard',nfl:'CAR',age:27,value:14,type:'bench'},{slot:'BN',name:'Tyrone Tracy',nfl:'NYG',age:24,value:16,type:'bench'},{slot:'BN',name:'Courtland Sutton',nfl:'DEN',age:30,value:20,type:'bench'},{slot:'BN',name:'Khalil Shakir',nfl:'BUF',age:26,value:18,type:'bench'},{slot:'BN',name:'Rashid Shaheed',nfl:'SEA',age:27,value:14,type:'bench'},{slot:'BN',name:'Mason Taylor',nfl:'NYJ',age:22,value:22,type:'bench'}]}];
+const TEAMS=[{id:'sandy',allTimeRecord:'20-6 (77%)',name:'Sandy Hook & Ladder',owner:'xbphill',rank:1,ovr:95,grade:'A+',trend:'up',record2024:'8-5',record2025:'12-1',champs:['2025'],posRanks:{QB:'#3',RB:'#2',WR:'#1',TE:'#1'},analysis:'Reigning champion and the most complete roster in the league. Nacua and JSN are the best WR duo in fantasy. Bowers and Warren make them the #1 TE room. CMC + Henry + Love + Chase Brown is the deepest RB room assembled. Mahomes and Daniels give elite QB flexibility. The only question is sustainability -- four of their top ten players are 29 or older.',dynastyNote:'Dynasty Rank #3. Wins now AND has a real future. JSN (24), Bowers (24), Warren (24), Love (22) are all young. The aging RB core -- CMC at 30 and Henry at 32 -- have limited runway. Light on capital at 8 picks but do not need to rebuild.',projection:'Championship favorite. Deepest roster in the league.',notes:'Reigning champ. CMC + Henry + Love at RB is the most stacked position group in league history.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Missing 2028 2nd — sent to Ottomarion in 4-team mega-trade.',roster:[{slot:'QB',name:'Patrick Mahomes',nfl:'KC',age:30,value:82,type:'starter'},{slot:'QB',name:'Jayden Daniels',nfl:'WAS',age:24,value:65,type:'starter'},{slot:'RB',name:'Christian McCaffrey',nfl:'SF',age:30,value:55,type:'starter'},{slot:'RB',name:'Derrick Henry',nfl:'BAL',age:32,value:38,type:'starter'},{slot:'RB',name:'Jeremiyah Love',nfl:'ARI',age:21,value:70,type:'starter'},{slot:'WR',name:'Puka Nacua',nfl:'LAR',age:24,value:44,type:'starter'},{slot:'WR',name:'Jaxon Smith-Njigba',nfl:'SEA',age:23,value:42,type:'starter'},{slot:'WR',name:'Jaylen Waddle',nfl:'DEN',age:26,value:40,type:'starter'},{slot:'TE',name:'Brock Bowers',nfl:'LV',age:22,value:70,type:'starter'},{slot:'WRT',name:'Chris Olave',nfl:'NO',age:25,value:36,type:'starter'},{slot:'WRT',name:'Chase Brown',nfl:'CIN',age:25,value:28,type:'starter'},{slot:'WRT',name:'Jonah Coleman',nfl:'DEN',age:22,value:18,type:'starter'},{slot:'K',name:'Jason Myers',nfl:'SEA',age:34,value:10,type:'starter'},{slot:'BN',name:'Trevor Lawrence',nfl:'JAX',age:26,value:40,type:'bench'},{slot:'BN',name:'Zach Charbonnet',nfl:'SEA',age:24,value:25,type:'bench'},{slot:'BN',name:'David Montgomery',nfl:'HOU',age:27,value:14,type:'bench'},{slot:'BN',name:'Michael Pittman Jr.',nfl:'PIT',age:27,value:18,type:'bench'},{slot:'BN',name:'Zavion Thomas',nfl:'CHI',age:22,value:10,type:'bench'},{slot:'BN',name:'Tyler Warren',nfl:'IND',age:24,value:32,type:'bench'},{slot:'TX',name:'Fernando Mendoza',nfl:'LV',age:22,value:28,type:'taxi'},{slot:'TX',name:'Mike Washington',nfl:'LV',age:22,value:20,type:'taxi'},{slot:'TX',name:'Emmett Johnson',nfl:'KC',age:22,value:14,type:'taxi'}]},{id:'lah',allTimeRecord:'19-7 (73%)',name:'Lah Kynasty',owner:'LahKyak',rank:2,ovr:91,grade:'A',trend:'up',record2024:'11-2',record2025:'8-5',champs:['2024'],posRanks:{QB:'#2',RB:'#1',WR:'#5',TE:'#2'},analysis:'Back-to-back title game appearances. Flipped JT and Henry for Cook and MHJ, landed Jadarian Price with the 1.05, hit both draft targets in Lemon and Bey. Gibbs is the best RB in this league. Allen makes every roster decision easier. The WR room is deeper than rankings suggest -- five receivers under 25 with real upside.',dynastyNote:'Dynasty Rank #2. Best dynasty profile when factoring roster age vs capital. Gibbs (24), Judkins (23), Irving (24), MHJ (24), Odunze (24), Burden (23) -- the core is young and ascending. Ten picks banked. Allen has three more elite seasons minimum.',projection:'Title contender. Allen + Gibbs is the most reliable weekly floor in the league. If MHJ breaks out in Year 2, Lah becomes the clear #1 team.',notes:'Champ 2024, runner-up 2025. The offseason heist — sent JT + Watson + picks, landed MHJ + Price + future capital. Hit both draft targets in Lemon and Bey. Went from JT + Henry to Cook + MHJ — younger, cheaper, more explosive. Allen + Gibbs is the engine. The dynasty is just getting started.',picks:{'2027':['1st','2nd','3rd (Otto)','3rd (KC)'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Two extra 2027 3rds from Ottomarion (Rachaad White trade) & killaCam (JT deal).',roster:[{slot:'QB',name:'Josh Allen',nfl:'BUF',age:29,value:72,type:'starter'},{slot:'QB',name:'Brock Purdy',nfl:'SF',age:25,value:38,type:'starter'},{slot:'RB',name:'Jahmyr Gibbs',nfl:'DET',age:23,value:68,type:'starter'},{slot:'RB',name:'Bucky Irving',nfl:'TB',age:23,value:52,type:'starter'},{slot:'RB',name:'James Cook',nfl:'BUF',age:25,value:42,type:'starter'},{slot:'WR',name:'A.J. Brown',nfl:'PHI',age:27,value:58,type:'starter'},{slot:'WR',name:'Garrett Wilson',nfl:'NYJ',age:25,value:62,type:'starter'},{slot:'WR',name:'Marvin Harrison Jr',nfl:'ARI',age:23,value:70,type:'starter'},{slot:'TE',name:'Tucker Kraft',nfl:'GB',age:24,value:28,type:'starter'},{slot:'WRT',name:'Luther Burden',nfl:'CHI',age:22,value:18,type:'starter'},{slot:'WRT',name:'Makai Lemon',nfl:'PHI',age:21,value:38,type:'starter'},{slot:'WRT',name:'Quinshon Judkins',nfl:'CLE',age:21,value:30,type:'starter'},{slot:'K',name:'Cam Little',nfl:'JAX',age:22,value:10,type:'starter'},{slot:'BN',name:'Tyler Shough',nfl:'NO',age:25,value:14,type:'bench'},{slot:'BN',name:'Kyle Monangai',nfl:'CHI',age:23,value:14,type:'bench'},{slot:'BN',name:'Jadarian Price',nfl:'SEA',age:21,value:35,type:'bench'},{slot:'BN',name:'Rome Odunze',nfl:'CHI',age:23,value:36,type:'bench'},{slot:'BN',name:'Germie Bernard',nfl:'PIT',age:22,value:8,type:'bench'},{slot:'BN',name:'Mike Evans',nfl:'SF',age:31,value:22,type:'bench'},{slot:'BN',name:'Parker Washington',nfl:'JAX',age:23,value:10,type:'bench'},{slot:'BN',name:'George Kittle',nfl:'SF',age:24,value:22,type:'bench'},{slot:'TX',name:'Jonathon Brooks',nfl:'CAR',age:22,value:18,type:'taxi'},{slot:'TX',name:'Bhayshul Tuten',nfl:'JAX',age:23,value:16,type:'taxi'},{slot:'TX',name:'Kenyon Sadiq',nfl:'NYJ',age:22,value:30,type:'taxi'}]},{id:'miso',allTimeRecord:'13-13 (50%)',name:'MisoSawC',owner:'MisoSawC',rank:3,ovr:86,grade:'A-',trend:'up',record2024:'5-8',record2025:'8-5',champs:[],posRanks:{QB:'#4',RB:'#5',WR:'#3',TE:'#5'},analysis:'Chase and London are as dangerous a WR duo as exists in fantasy. Lamar makes every week must-start. Bijan is the RB1 in dynasty. The problem is they have no future picks -- traded two first rounders for Lamar and are all-in on 2026. If they win it was genius. If they do not, the rebuild starts from scratch.',dynastyNote:'Dynasty Rank #5. Zero 2027 or 2028 first round picks. Everything rides on 2026. Chase (26), London (25), Bijan (24) are young but the capital hole is real. One bad injury season and this roster collapses.',projection:'Must-win 2026. Loaded for a title run now. If they miss the next two championships, the Lamar trade becomes a regret.',notes:'Lamar + Bijan + Chase is as dangerous as it gets. Win-now or bust — no 2027/2028 1sts to fall back on.',picks:{'2027':['2nd','3rd'],'2028':['2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'No 2027 or 2028 1sts — both sent to Amon Drugs for Lamar Jackson.',roster:[{slot:'QB',name:'Lamar Jackson',nfl:'BAL',age:28,value:88,type:'starter'},{slot:'QB',name:'Sam Darnold',nfl:'SEA',age:28,value:22,type:'starter'},{slot:'RB',name:'Bijan Robinson',nfl:'ATL',age:24,value:78,type:'starter'},{slot:'RB',name:'Kenneth Walker',nfl:'KC',age:25,value:52,type:'starter'},{slot:'RB',name:'RJ Harvey',nfl:'DEN',age:23,value:30,type:'starter'},{slot:'WR',name:"Ja'Marr Chase",nfl:'CIN',age:25,value:95,type:'starter'},{slot:'WR',name:'Drake London',nfl:'ATL',age:24,value:56,type:'starter'},{slot:'WR',name:'Emeka Egbuka',nfl:'TB',age:23,value:48,type:'starter'},{slot:'TE',name:'Harold Fannin',nfl:'CLE',age:23,value:40,type:'starter'},{slot:'WRT',name:'DJ Moore',nfl:'BUF',age:28,value:28,type:'starter'},{slot:'WRT',name:'Carnell Tate',nfl:'TEN',age:21,value:42,type:'starter'},{slot:'WRT',name:'Jayden Reed',nfl:'GB',age:26,value:22,type:'starter'},{slot:'K',name:'Harrison Butker',nfl:'KC',age:30,value:10,type:'starter'},{slot:'BN',name:'Blake Corum',nfl:'LAR',age:24,value:18,type:'bench'},{slot:'BN',name:'Kaytron Allen',nfl:'WAS',age:21,value:15,type:'bench'},{slot:'BN',name:'Jalen Coker',nfl:'CAR',age:24,value:14,type:'bench'},{slot:'BN',name:'Oronde Gadsden',nfl:'LAC',age:25,value:18,type:'bench'},{slot:'TX',name:'Tez Johnson',nfl:'TB',age:23,value:12,type:'taxi'},{slot:'TX',name:'Malachi Fields',nfl:'NYG',age:22,value:14,type:'taxi'},{slot:'TX',name:'Chris Bell',nfl:'MIA',age:22,value:30,type:'taxi'},{slot:'BN',name:'Josh Downs',nfl:'IND',age:24,value:14,type:'bench'}]},{id:'amon',allTimeRecord:'7-19 (27%)',name:'Amon Drugs',owner:'JJ4SEVEN',rank:4,ovr:88,grade:'A',trend:'up',record2024:'2-11',record2025:'5-8',champs:[],posRanks:{QB:'#1',RB:'#8',WR:'#4',TE:'#3'},analysis:'Sold Lamar for two future firsts and quietly built the best QB room in the league. Maye and Hurts is an elite 2QB combo -- Maye at 24 is the highest-ceiling QB in this draft class. Eleven picks total. The WR room with ARSB and Collins is strong. The problem is the RB room -- Swift and committee backs will not win you weeks.',dynastyNote:'Dynasty Rank #4. Elite QB future, elite capital, weak RB room today. Maye (24) is the most valuable dynasty QB in this league. Eleven picks means every hole can be filled. A genuine contender in 2027-2028.',projection:'Best long-term outlook in the league. Could legitimately draft Jeremiah Smith AND Ryan Williams in 2027. Rebuilding the RIGHT way.',notes:'Sold Lamar for 2 future 1sts. 11 picks total. Young WR core + elite capital = dynasty superteam incoming.',picks:{'2027':['1st','1st (Miso)','2nd','3rd'],'2028':['1st','1st (Miso)','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Richest pick inventory (11 picks). Two MisoSawC 1sts from the Lamar trade.',roster:[{slot:'QB',name:'Drake Maye',nfl:'NE',age:23,value:72,type:'starter'},{slot:'QB',name:'Jalen Hurts',nfl:'PHI',age:27,value:75,type:'starter'},{slot:'RB',name:"D'Andre Swift",nfl:'CHI',age:26,value:32,type:'starter'},{slot:'RB',name:'Jaylen Warren',nfl:'PIT',age:26,value:22,type:'starter'},{slot:'RB',name:'Rhamondre Stevenson',nfl:'NE',age:27,value:20,type:'starter'},{slot:'WR',name:'Amon-Ra St. Brown',nfl:'DET',age:26,value:72,type:'starter'},{slot:'WR',name:'Nico Collins',nfl:'HOU',age:27,value:58,type:'starter'},{slot:'WR',name:'Jordyn Tyson',nfl:'NO',age:22,value:40,type:'starter'},{slot:'TE',name:'Trey McBride',nfl:'ARI',age:26,value:65,type:'starter'},{slot:'WRT',name:'Brian Thomas Jr',nfl:'JAX',age:23,value:52,type:'starter'},{slot:'WRT',name:'Xavier Worthy',nfl:'KC',age:22,value:32,type:'starter'},{slot:'WRT',name:'DK Metcalf',nfl:'PIT',age:28,value:30,type:'starter'},{slot:'K',name:'Chris Boswell',nfl:'PIT',age:33,value:10,type:'starter'},{slot:'BN',name:'Brian Robinson',nfl:'ATL',age:27,value:16,type:'bench'},{slot:'BN',name:'Isiah Pacheco',nfl:'DET',age:26,value:28,type:'bench'},{slot:'BN',name:'Tank Bigsby',nfl:'PHI',age:23,value:14,type:'bench'},{slot:'BN',name:'Ray Davis',nfl:'BUF',age:25,value:12,type:'bench'},{slot:'BN',name:'Quentin Johnston',nfl:'LAC',age:24,value:16,type:'bench'},{slot:'BN',name:'Dalton Kincaid',nfl:'BUF',age:26,value:18,type:'bench'},{slot:'BN',name:'Emanuel Wilson',nfl:'SEA',age:25,value:8,type:'bench'}]},{id:'killacam',allTimeRecord:'15-11 (58%)',name:'killaCam',owner:'cameronjones02',rank:5,ovr:87,grade:'A-',trend:'steady',record2024:'6-7',record2025:'9-4',champs:[],posRanks:{QB:'#7',RB:'#4',WR:'#2',TE:'#7'},capitalNote:'',analysis:'The most talented WR room ever assembled in this league -- Lamb, Jefferson, Nabers. Achane and Taylor make the RB room legitimate. The issues are real: zero 2027 picks, an aging QB situation, and Kelce hanging on at TE. This roster wins in 2026 or it does not win at all.',dynastyNote:'Dynasty Rank #6. Zero 2027 picks is a structural problem. Williams (25) is the only young piece at QB. Prescott at 33 will likely retire soon. The WR room buys time but the clock is ticking.',projection:'Win-now contender with elite talent. Zero 2027 picks means must win in 2026-2027. WR room alone makes them dangerous every week.',notes:'93 OVR on raw talent alone. C grade reflects zero 2027 picks + MHJ trade, not the roster itself — which is elite.',picks:{'2027':[],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'ZERO 2027 picks — 1st & 2nd to Ottomarion, 3rd to LahKyak.',roster:[{slot:'QB',name:'Caleb Williams',nfl:'CHI',age:23,value:62,type:'starter'},{slot:'QB',name:'Dak Prescott',nfl:'DAL',age:32,value:42,type:'starter'},{slot:'RB',name:'Jonathan Taylor',nfl:'IND',age:27,value:65,type:'starter'},{slot:'RB',name:"De'Von Achane",nfl:'MIA',age:23,value:68,type:'starter'},{slot:'RB',name:'Cam Skattebo',nfl:'NYG',age:23,value:32,type:'starter'},{slot:'WR',name:'Justin Jefferson',nfl:'MIN',age:26,value:92,type:'starter'},{slot:'WR',name:'Malik Nabers',nfl:'NYG',age:22,value:78,type:'starter'},{slot:'WR',name:'CeeDee Lamb',nfl:'DAL',age:26,value:85,type:'starter'},{slot:'TE',name:'Travis Kelce',nfl:'KC',age:36,value:38,type:'starter'},{slot:'WRT',name:'Terry McLaurin',nfl:'WAS',age:30,value:32,type:'starter'},{slot:'WRT',name:'Brandon Aiyuk',nfl:'FA',age:27,value:40,type:'starter'},{slot:'WRT',name:'Davante Adams',nfl:'LAR',age:33,value:28,type:'starter'},{slot:'K',name:'Cameron Dicker',nfl:'LAC',age:25,value:10,type:'starter'},{slot:'BN',name:'Kyler Murray',nfl:'MIN',age:28,value:35,type:'bench'},{slot:'BN',name:'Stefon Diggs',nfl:'FA',age:30,value:18,type:'bench'},{slot:'BN',name:'Jordan Mason',nfl:'MIN',age:26,value:14,type:'bench'},{slot:'BN',name:'Troy Franklin',nfl:'DEN',age:23,value:16,type:'bench'},{slot:'BN',name:'Ricky Pearsall',nfl:'SF',age:24,value:14,type:'bench'},{slot:'BN',name:'Omar Cooper',nfl:'NYJ',age:22,value:22,type:'bench'},{slot:'TX',name:'Shedeur Sanders',nfl:'CLE',age:23,value:28,type:'taxi'},{slot:'TX',name:"Ja'Kobi Lane",nfl:'BAL',age:22,value:14,type:'taxi'},{slot:'TX',name:'Denzel Boston',nfl:'CLE',age:22,value:20,type:'taxi'}]},{id:'nflzey',allTimeRecord:'6-7 (46%)',name:'NFL Zey',owner:'tracesheets',rank:6,ovr:81,grade:'B+',trend:'up',record2024:'N/A',record2025:'6-7',champs:[],posRanks:{QB:'#5',RB:'#7',WR:'#8',TE:'#6'},analysis:'Burrow and Herbert is a legitimate 2QB combo -- this room is underrated. Pickens is ascending. The RB room is thin beyond Breece Hall. Loveland at TE is a dynasty gem. Year 2 expansion team that showed everyone they belong with the playoff upset in Year 1.',dynastyNote:'Dynasty Rank #8. Thin roster talent base outside Burrow, Herbert, Pickens, and Loveland. Capital is there to fix it but requires patience. Year 3 is about building the foundation.',projection:'Year 2 ceiling is a playoff appearance. The QB room makes them competitive every week. 2027 draft class could be the turning point.',notes:'Expansion Yr 2. Better than their record shows. Burrow + Herbert + full pick slate heading into a loaded 2027 class.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Full clean slate — no picks traded away. Smart for an expansion team.',roster:[{slot:'QB',name:'Joe Burrow',nfl:'CIN',age:28,value:75,type:'starter'},{slot:'QB',name:'Justin Herbert',nfl:'LAC',age:27,value:62,type:'starter'},{slot:'RB',name:'Breece Hall',nfl:'NYJ',age:25,value:62,type:'starter'},{slot:'RB',name:'Rico Dowdle',nfl:'PIT',age:27,value:32,type:'starter'},{slot:'RB',name:'Jacory Croskey-Merritt',nfl:'WAS',age:22,value:22,type:'starter'},{slot:'WR',name:'George Pickens',nfl:'DAL',age:24,value:52,type:'starter'},{slot:'WR',name:'Tee Higgins',nfl:'CIN',age:27,value:48,type:'starter'},{slot:'WR',name:'DeVonta Smith',nfl:'PHI',age:29,value:50,type:'starter'},{slot:'TE',name:'AJ Barner',nfl:'SEA',age:23,value:28,type:'starter'},{slot:'WRT',name:'Chris Godwin',nfl:'TB',age:29,value:28,type:'starter'},{slot:'WRT',name:'Jordan Addison',nfl:'MIN',age:23,value:32,type:'starter'},{slot:'WRT',name:'Tyreek Hill',nfl:'FA',age:32,value:25,type:'starter'},{slot:'K',name:'Brandon Aubrey',nfl:'DAL',age:30,value:10,type:'starter'},{slot:'BN',name:'Matthew Stafford',nfl:'LAR',age:38,value:18,type:'bench'},{slot:'BN',name:'Aaron Jones',nfl:'MIN',age:31,value:15,type:'bench'},{slot:'BN',name:'Tyjae Spears',nfl:'TEN',age:24,value:18,type:'bench'},{slot:'BN',name:'Tank Dell',nfl:'HOU',age:26,value:20,type:'bench'},{slot:'BN',name:'Jauan Jennings',nfl:'FA',age:28,value:14,type:'bench'},{slot:'TX',name:'Colston Loveland',nfl:'CHI',age:22,value:32,type:'taxi'},{slot:'TX',name:'Cam Ward',nfl:'TEN',age:22,value:32,type:'taxi'},{slot:'TX',name:'KC Concepcion',nfl:'CLE',age:22,value:35,type:'taxi'}]},{id:'otto',allTimeRecord:'3-10 (23%)',name:'Ottomarion Empire',owner:'joshlazaroe',rank:7,ovr:82,grade:'B+',trend:'up',record2024:'N/A',record2025:'3-10',champs:[],posRanks:{QB:'#8',RB:'#3',WR:'#7',TE:'#4'},analysis:'The most confusing roster in the league to evaluate. Traded all 2026 draft capital and made zero picks -- but banked 12 future picks in return. Jeanty and Hampton are two of the best dynasty RBs in this class. Goff and Mayfield are stopgap QBs. Built for 2027-2028, not 2026.',dynastyNote:'Dynasty Rank #1. Twelve picks, two elite rookie RBs, roster built for the future. Otto skipped 2026 intentionally. If Jeanty and Hampton become what their dynasty profiles suggest, Otto wins a championship in 2028.',projection:'2027 breakout target. Expect another tough 2026 as QB room holds them back, but the draft capital + young RBs set up a monster future.',notes:'Expansion Yr 2. Played the long game perfectly. 12 picks including KC\'s 2027 1st. Young RBs + Travis Hunter taxi = future powerhouse.',picks:{'2027':['1st','1st (KC)','2nd (KC)','2nd','3rd (LK)'],'2028':['1st','2nd (Sandy)','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Most picks in league (12). Holding KC 2027 1st+2nd, LahKyak 2027 3rd, Sandy 2028 2nd.',roster:[{slot:'QB',name:'Jared Goff',nfl:'DET',age:32,value:32,type:'starter'},{slot:'QB',name:'Baker Mayfield',nfl:'TB',age:31,value:28,type:'starter'},{slot:'RB',name:'Ashton Jeanty',nfl:'LV',age:22,value:75,type:'starter'},{slot:'RB',name:'TreVeyon Henderson',nfl:'NE',age:24,value:42,type:'starter'},{slot:'RB',name:'Omarion Hampton',nfl:'LAC',age:21,value:38,type:'starter'},{slot:'WR',name:'Zay Flowers',nfl:'BAL',age:24,value:42,type:'starter'},{slot:'WR',name:'Jameson Williams',nfl:'DET',age:24,value:35,type:'starter'},{slot:'WR',name:'Jakobi Meyers',nfl:'JAX',age:29,value:16,type:'starter'},{slot:'TE',name:'Sam LaPorta',nfl:'DET',age:24,value:38,type:'starter'},{slot:'WRT',name:"Wan'Dale Robinson",nfl:'TEN',age:24,value:14,type:'starter'},{slot:'WRT',name:"De'Zhaun Stribling",nfl:'SF',age:23,value:12,type:'starter'},{slot:'WRT',name:'Rachaad White',nfl:'WAS',age:27,value:22,type:'starter'},{slot:'K',name:'Jake Bates',nfl:'DET',age:25,value:10,type:'starter'},{slot:'BN',name:'Kenneth Gainwell',nfl:'TB',age:26,value:10,type:'bench'},{slot:'BN',name:'Tyler Allgeier',nfl:'ARI',age:26,value:12,type:'bench'},{slot:'BN',name:'Romeo Doubs',nfl:'GB',age:25,value:16,type:'bench'},{slot:'BN',name:'Dallas Goedert',nfl:'PHI',age:30,value:20,type:'bench'},{slot:'TX',name:'Bryce Lance',nfl:'NO',age:22,value:10,type:'taxi'},{slot:'TX',name:'Travis Hunter',nfl:'JAX',age:21,value:38,type:'taxi'},{slot:'BN',name:'Jaxson Dart',nfl:'NYG',age:22,value:22,type:'bench'},{slot:'BN',name:'Kyle Pitts',nfl:'ATL',age:26,value:35,type:'bench'},{slot:'BN',name:'Tre Harris',nfl:'LAC',age:23,value:18,type:'bench'},{slot:'BN',name:'Eli Stowers',nfl:'PHI',age:22,value:10,type:'bench'},{slot:'TX',name:'Oscar Delp',nfl:'NO',age:23,value:15,type:'taxi'}]},{id:'abab',allTimeRecord:'8-18 (31%)',name:'Ababineaux',owner:'Ababineaux11',rank:8,ovr:85,grade:'A-',trend:'up',record2024:'7-6',record2025:'1-12',champs:[],posRanks:{QB:'#6',RB:'#6',WR:'#6',TE:'#8'},analysis:'Do not sleep on Ababineaux. The 1-12 season is in the past. Barkley and Jacobs is a legitimate RB1-RB2 combination. Rice and McMillan is a solid young WR core. The QB room with Love and Nix is serviceable. A legitimate bounce-back candidate -- the talent is there and the dynasty window is quietly opening.',dynastyNote:'Dynasty Rank #7. Roster skews older at key positions. Barkley (29), Jacobs (28), Sutton (31) have limited runway. The saving grace is McMillan (23) and Rice (26). Miss 2026 and the rebuild gets painful.',projection:'Projected playoff bubble. Better than the 2025 record suggests. If Saquon stays healthy and McMillan breaks out, they sneak into the playoffs.',notes:' King 2025 but don\'t sleep on them. All-veteran approach + clean picks + young WRs = legitimate bounce-back candidate.',picks:{'2027':['1st','2nd','3rd'],'2028':['1st','2nd','3rd'],'2029':['1st','2nd','3rd']},pickNote:'Full clean slate — no picks traded away.',roster:[{slot:'QB',name:'Bo Nix',nfl:'DEN',age:25,value:42,type:'starter'},{slot:'QB',name:'Jordan Love',nfl:'GB',age:27,value:55,type:'starter'},{slot:'RB',name:'Saquon Barkley',nfl:'PHI',age:28,value:58,type:'starter'},{slot:'RB',name:'Josh Jacobs',nfl:'GB',age:27,value:32,type:'starter'},{slot:'RB',name:'Kyren Williams',nfl:'LAR',age:26,value:38,type:'starter'},{slot:'WR',name:'Rashee Rice',nfl:'KC',age:25,value:52,type:'starter'},{slot:'WR',name:'Tetairoa McMillan',nfl:'CAR',age:22,value:48,type:'starter'},{slot:'WR',name:'Ladd McConkey',nfl:'LAC',age:24,value:42,type:'starter'},{slot:'TE',name:'Mark Andrews',nfl:'BAL',age:30,value:38,type:'starter'},{slot:'WRT',name:'Travis Etienne',nfl:'NO',age:26,value:28,type:'starter'},{slot:'WRT',name:'Jayden Higgins',nfl:'HOU',age:22,value:22,type:'starter'},{slot:'WRT',name:'Matthew Golden',nfl:'GB',age:22,value:18,type:'starter'},{slot:'BN',name:'CJ Stroud',nfl:'HOU',age:24,value:38,type:'bench'},{slot:'BN',name:'Chuba Hubbard',nfl:'CAR',age:27,value:14,type:'bench'},{slot:'BN',name:'Tyrone Tracy',nfl:'NYG',age:24,value:16,type:'bench'},{slot:'BN',name:'Courtland Sutton',nfl:'DEN',age:30,value:20,type:'bench'},{slot:'BN',name:'Khalil Shakir',nfl:'BUF',age:26,value:18,type:'bench'},{slot:'BN',name:'Rashid Shaheed',nfl:'SEA',age:27,value:14,type:'bench'},{slot:'BN',name:'Mason Taylor',nfl:'NYJ',age:22,value:22,type:'bench'}]}];
 
 const PROSPECTS=[
   {rank:1,name:'Jeremiah Smith',pos:'WR',school:'Ohio State',age:19,nflRound:'Top 5',grade:'A+',gradeClass:'sg-ap',note:'Consensus 1.01. Julio Jones athleticism. Dominated as true freshman. Instant dynasty WR1 from day one.'},
@@ -852,7 +840,7 @@ function buildRoster(){
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
         <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
-        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?p.ownershipHistory.map(ab=>'<span style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span>':''}
+        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?p.ownershipHistory.map(ab=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+ab+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span>':''}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
@@ -967,487 +955,352 @@ buildRoster();
 buildCapital();
 buildScout();
 
-// ==================== TRADE CALCULATOR ====================
-let calcSend=[], calcGet=[];
-
-function calcInitSelects(){
-  ['calcSendTeam','calcGetTeam'].forEach(id=>{
-    const sel=document.getElementById(id); if(!sel) return;
-    TEAMS.forEach(t=>{
-      const opt=document.createElement('option');
-      opt.value=t.id; opt.textContent=t.name.split(' ').slice(0,2).join(' ');
-      sel.appendChild(opt);
-    });
-    if(id==='calcSendTeam') sel.value='lah';
-    if(id==='calcGetTeam') sel.value='killacam';
-  });
-  calcLoadRoster('send'); calcLoadRoster('get');
-}
-
-// Team needs data
-const TEAM_NEEDS={
-  sandy:  {needs:['Young RB depth (CMC/Henry aging)','TE depth behind Bowers','WR depth after starters'],strengths:['#1 RB room','#1 TE in Bowers','Reigning champ']},
-  lah:    {needs:['TE upgrade from Kraft','RB insurance for aging room','Late-round QB depth'],strengths:['#1 QB in Allen','Top-2 RB in Gibbs','Deep WR corps']},
-  miso:   {needs:['QB2 upgrade from Darnold','RB depth beyond Bijan','Pick capital (no 2027/28 1sts)'],strengths:['#1 WR in Chase','Lamar at peak','Must-win window now']},
-  amon:   {needs:['RB overhaul (Swift/Warren/Stevenson weak)','WR depth beyond starters','Win-now pieces before picks arrive'],strengths:['McBride TE1','11 picks (most in league)','Two MisoSawC 1sts']},
-  killacam:{needs:['2027 draft capital (has ZERO picks)','TE upgrade from aging Kelce','QB upgrade from CW/Dak']  ,strengths:['#1 WR room (Lamb+JJ+Nabers)','JT+Achane RB core','Win-now window open']},
-  nflzey: {needs:['RB depth beyond Breece Hall','Young WR (aging room)','Offensive weapons around Burrow/Herbert'],strengths:['Top-5 QB room','Full 9-pick slate','Concepcion/Loveland taxi']},
-  otto:   {needs:['QB upgrade (Goff/Baker are weak)','WR depth (very thin)','Win-now bridge pieces'],strengths:['Most picks in league (12)','Young RB trio (Jeanty+Henderson+Hampton)','Travis Hunter on taxi']},
-  abab:   {needs:['Young RB replacements for aging vets','TE upgrade from Andrews','QB2 upgrade'],strengths:['Saquon at peak health','Young WR core (Rice+McMillan+McConkey)','Full clean 9-pick slate']},
-};
-
-function calcLoadRoster(side){
-  const tid=document.getElementById(side==='send'?'calcSendTeam':'calcGetTeam').value;
-  const t=TEAMS.find(x=>x.id===tid); if(!t) return;
-  const pool=document.getElementById(side==='send'?'calcSendPool':'calcGetPool');
-  const posC={QB:'tg-qb',RB:'tg-rb',WR:'tg-wr',TE:'tg-te',WRT:'tg-fx'};
-  const all=[...t.roster.filter(p=>p.type==='starter'),...t.roster.filter(p=>p.type==='bench')];
-  pool.innerHTML=all.map(p=>{
-    const safeId='cp-'+side+p.name.replace(/[^a-zA-Z0-9]/g,'');
-    const safeName=p.name.replace(/"/g,'&quot;');
-    return `<div data-side="${side}" data-name="${safeName}" data-value="${p.value}" data-slot="${p.slot}" id="${safeId}"
-      class="calc-player-row"
-      style="display:flex;align-items:center;padding:5px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:4px;transition:background 0.1s">
-      <span class="tag ${posC[p.slot]||''}" style="font-size:8px;margin-right:6px;flex-shrink:0">${p.slot}</span>
-      <span style="flex:1;font-size:12px;font-weight:700">${p.name}</span>
-      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${p.value}</span>
-    </div>`;
-  }).join('');
-  pool.onclick=e=>{
-    const row=e.target.closest('.calc-player-row');
-    if(!row) return;
-    calcToggle(row.dataset.side,row.dataset.name,parseInt(row.dataset.value),row.dataset.slot);
-  };
-  // Render team needs panel
-  const needsId=side==='send'?'calcSendNeeds':'calcGetNeeds';
-  const needsEl=document.getElementById(needsId);
-  if(needsEl){
-    const nd=TEAM_NEEDS[t.id];
-    if(nd){
-      needsEl.innerHTML=`<div style="padding:8px 10px;background:var(--surface2);border-top:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;color:var(--red);text-transform:uppercase;margin-bottom:5px">⬆️ Biggest Needs</div>
-        ${nd.needs.map(n=>`<div style="font-size:11px;font-weight:600;color:var(--text);padding:2px 0;border-bottom:1px solid var(--border)">• ${n}</div>`).join('')}
-        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;color:var(--accent);text-transform:uppercase;margin-top:7px;margin-bottom:5px">✅ Strengths</div>
-        ${nd.strengths.map(s=>`<div style="font-size:11px;font-weight:600;color:var(--text-dim);padding:2px 0">• ${s}</div>`).join('')}
-      </div>`;
-    }
-  }
-}
-
-function calcToggle(side,name,value,slot){
-  const arr=side==='send'?calcSend:calcGet;
-  const safeId='cp-'+side+name.replace(/[^a-zA-Z0-9]/g,'');
-  const el=document.getElementById(safeId);
-  const idx=arr.findIndex(x=>x.name===name);
-  if(idx>=0){
-    arr.splice(idx,1);
-    if(el){el.style.background='';}
-  } else {
-    arr.push({name,value:parseInt(value),slot});
-    if(el) el.style.background=side==='send'?'rgba(255,68,85,0.12)':'rgba(200,255,0,0.08)';
-  }
-  calcRenderBaskets(); calcUpdateValues();
-}
-
-function calcAddPick(side){
-  const sel=document.getElementById(side==='send'?'calcSendPick':'calcGetPick');
-  if(!sel.value) return;
-  const [name,val]=sel.value.split('|');
-  const arr=side==='send'?calcSend:calcGet;
-  if(!arr.find(x=>x.name===name)) arr.push({name,value:parseInt(val),slot:'PK'});
-  sel.value=''; calcRenderBaskets(); calcUpdateValues();
-}
-
-function calcRenderBaskets(){
-  ['send','get'].forEach(side=>{
-    const arr=side==='send'?calcSend:calcGet;
-    const el=document.getElementById(side==='send'?'calcSendBasket':'calcGetBasket');
-    if(!arr.length){el.innerHTML='<div style="color:var(--text-muted);font-size:11px;font-style:italic">Nothing added</div>';return;}
-    el.innerHTML=arr.map((p,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:12px;font-weight:700">
-      <span>${p.name}</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim)">${p.value}</span>
-        <span data-removeside="${side}" data-removeidx="${i}" class="calc-remove-btn" style="cursor:pointer;color:var(--text-dim);font-size:16px;line-height:1">×</span>
-      </div></div>`).join('');
-    // event delegation for remove buttons
-    el.onclick=function(e){
-      const btn=e.target.closest('.calc-remove-btn');
-      if(!btn) return;
-      calcRemove(btn.dataset.removeside, parseInt(btn.dataset.removeidx));
-    };
-  });
-}
-
-function calcRemove(side,idx){
-  const arr=side==='send'?calcSend:calcGet;
-  const removed=arr.splice(idx,1)[0];
-  const el=document.getElementById('cp-'+side+removed.name.replace(/[^a-zA-Z0-9]/g,''));
-  if(el) el.style.background='';
-  calcRenderBaskets(); calcUpdateValues();
-}
-
-function calcUpdateValues(){
-  const sv=calcSend.reduce((s,x)=>s+x.value,0);
-  const gv=calcGet.reduce((s,x)=>s+x.value,0);
-  const diff=gv-sv; const total=Math.max(sv+gv,1);
-  document.getElementById('calcSendVal').textContent=sv;
-  document.getElementById('calcGetVal').textContent=gv;
-  const diffEl=document.getElementById('calcDiff');
-  diffEl.textContent=diff===0?'EVEN':diff>0?'+'+diff:diff;
-  diffEl.style.color=diff>8?'var(--accent)':diff<-8?'var(--red)':'var(--gold)';
-  document.getElementById('calcBarSend').style.width=Math.min(100,(sv/total)*100)+'%';
-  document.getElementById('calcBarGet').style.width=Math.min(100,(gv/total)*100)+'%';
-  const vrd=document.getElementById('calcVerdict');
-  if(!calcSend.length||!calcGet.length){
-    vrd.style.cssText='margin:0 12px 12px;padding:8px 12px;border-radius:8px;background:var(--surface2);font-family:"DM Mono",monospace;font-size:10px;color:var(--text-dim);text-align:center';
-    vrd.textContent='Add players to both sides to evaluate'; return;
-  }
-  const pct=((gv-sv)/Math.max(sv,1))*100;
-  if(pct>15){vrd.style.cssText='margin:0 12px 12px;padding:8px 12px;border-radius:8px;background:rgba(200,255,0,0.08);border:1px solid rgba(200,255,0,0.2);font-family:"DM Mono",monospace;font-size:10px;color:var(--accent);text-align:center';vrd.textContent='YOU WIN (+'+diff+' pts, +'+Math.round(pct)+'%)';}
-  else if(pct<-15){vrd.style.cssText='margin:0 12px 12px;padding:8px 12px;border-radius:8px;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.2);font-family:"DM Mono",monospace;font-size:10px;color:var(--red);text-align:center';vrd.textContent='YOU LOSE ('+diff+' pts, '+Math.round(pct)+'%)';}
-  else{vrd.style.cssText='margin:0 12px 12px;padding:8px 12px;border-radius:8px;background:rgba(200,168,0,0.08);border:1px solid rgba(200,168,0,0.2);font-family:"DM Mono",monospace;font-size:10px;color:var(--gold);text-align:center';vrd.textContent='FAIR TRADE ('+(diff>0?'+':'')+diff+' pts)';}
-}
-
-
-// ==================== WHATS HAPPENING ====================
-// Manual feed - replace with Sleeper API data after hosting
-var FEED = [
-  {
-    type:'news', icon:'📋', title:'Lah drops Kyle Pitts, adds George Kittle',
-    sub:'Commissioner makes a TE swap -- releases Kyle Pitts and picks up George Kittle off the free agent wire.',
-    time:'Jun 8, 2026'
-  },
-  {
-    type:'news', icon:'📋', title:'Ottomarion Empire goes shopping -- 3 adds',
-    sub:'Otto picks up Kyle Pitts (dropped by Lah), Tre Harris, and Oscar Delp. Capital hoarding meets roster building.',
-    time:'Jun 2026'
-  },
-  {
-    type:'news', icon:'📋', title:'killaCam drops Alvin Kamara, adds Stefon Diggs',
-    sub:'killaCam releases Kamara and picks up Stefon Diggs. WR room shuffle for the win-now window.',
-    time:'Jun 2026'
-  },
-  {
-    type:'news', icon:'🏆', title:'First waiver claim of the season -- Miso wins Josh Downs for $2',
-    sub:'MisoSawC wins the first waiver claim of 2026, picking up Josh Downs for $2 after killaCam dropped him. The waiver wire era has begun.',
-    time:'May 1, 2026'
-  },
-  {
-    type:'trade', icon:'🔄', title:'The Foursome -- Lah sends Henry for Cook',
-    sub:'Part of the 4-team blockbuster. Lah sent Derrick Henry + 2027 2nd to get James Cook. Sandy received CMC + Henry. killaCam received CeeDee Lamb + Cam Skattebo. Otto stacked future capital.',
-    time:'Apr 30, 2026'
-  },
-  {
-    type:'trade', icon:'🔄', title:'Lah acquires MHJ + Jadarian Price from killaCam',
-    sub:'Lah sent Jonathan Taylor + Christian Watson + Otto 2026 3rd to killaCam. Received Marvin Harrison Jr. + 1.05 pick (became Jadarian Price) + 2027 2nd + 2027 3rd.',
-    time:'Apr 23, 2026'
-  },
-  {
-    type:'trade', icon:'🔄', title:'MisoSawC trades for Lamar Jackson',
-    sub:'MisoSawC sent 2027 1st + 2028 1st to Amon Drugs for Lamar Jackson. Zero future first round picks remain for Miso. Win now or bust.',
-    time:'Apr 29, 2026'
-  },
-  {
-    type:'news', icon:'📢', title:'2026 Season is here!',
-    sub:'Delinquent Dynasty III kicks off Season 3. 8 teams, $175 on the line.',
-    time:'Season 3 -- 2026'
-  },
-  {
-    type:'injury', icon:'🚨', title:'Malik Nabers placed on IR',
-    sub:'killaCam loses their WR2 before the season even starts. Brutal blow for a team already without 2027 picks.',
-    time:'Preseason 2026'
-  },
-  {
-    type:'news', icon:'😳', title:'Neither expansion team had a 1st round pick in 2026',
-    sub:'Otto traded all capital for future assets. NFL Zey autopicked a kicker instead of Carnell Tate. The league gave Zey an extra minute -- still took the kicker.',
-    time:'2026 Draft'
-  },
-  {
-    type:'news', icon:'👑', title:'Sandy Hook wins Season 2 championship',
-    sub:'12-1 regular season. Dominant championship run. Revenge tour complete after 2024 finals loss to Lah.',
-    time:'Jan 2026'
-  },
-  {
-    type:'news', icon:'⚡', title:'NFL Zey upsets killaCam in the playoffs',
-    sub:'5-seed expansion team in Year 1 takes down the No. 2 seed in the first round. One of the best upsets in league history.',
-    time:'Playoffs 2025'
-  }
-];
-
-var TYPE_CLASS = {trade:'ni-trade',injury:'ni-injury',waiver:'ni-waiver',rank:'ni-rank',news:'ni-news'};
-function buildNotifFeed() {
-  var feed = document.getElementById('notifFeed');
-  if (!feed) return;
-  var html = '<div class="notif-count">' + FEED.length + ' updates</div>';
-
-  FEED.forEach(function(item) {
-    var gradeHtml = '';
-    html += '<div class="notif-item">';
-    html += '<div class="notif-item-icon ' + (TYPE_CLASS[item.type]||'ni-news') + '">' + item.icon + '</div>';
-    html += '<div class="notif-item-body">';
-    html += '<div class="notif-item-title">' + item.title + '</div>';
-    html += '<div class="notif-item-sub">' + item.sub + '</div>';
-    html += '<div class="notif-item-time">' + item.time + '</div>';
-    html += '</div>';
-    html += gradeHtml;
-    html += '</div>';
-  });
-
-  feed.innerHTML = html;
-}
-
-function openNotif() {
-  document.getElementById('notifPanel').classList.add('open');
-  document.getElementById('notifOverlay').classList.add('open');
-  document.getElementById('notifDot').style.display = 'none';
-  buildNotifFeed();
-  document.body.style.overflow = 'hidden';
-}
-
-function closeNotif() {
-  document.getElementById('notifPanel').classList.remove('open');
-  document.getElementById('notifOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
-// ==================== END WHATS HAPPENING ====================
-
-// ==================== SEASON COUNTDOWN ====================
-function buildCountdown() {
-  var el = document.getElementById('countdownWrap');
-  if (!el) return;
-  // NFL 2026 season opener - September 5, 2026 8:20 PM ET
-  var kickoff = new Date('2026-09-05T20:20:00-04:00');
-  var now = new Date();
-  var diff = kickoff - now;
-
-  if (diff <= 0) {
-    el.innerHTML = '<div class="countdown-wrap"><div class="countdown-label">Season Status</div><div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--accent);letter-spacing:0.06em;">SEASON IS LIVE</div></div>';
-    return;
-  }
-
-  var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  var secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-  el.innerHTML =
-    '<div class="countdown-wrap">' +
-      '<div class="countdown-label"><span class="countdown-live"></span>Your Dynasty Begins · Sep 5, 2026</div>' +
-      '<div class="countdown-units">' +
-        '<div class="countdown-unit"><div class="countdown-num">' + String(days).padStart(2,'0') + '</div><div class="countdown-unit-label">Days</div></div>' +
-        '<div class="countdown-divider">:</div>' +
-        '<div class="countdown-unit"><div class="countdown-num">' + String(hours).padStart(2,'0') + '</div><div class="countdown-unit-label">Hrs</div></div>' +
-        '<div class="countdown-divider">:</div>' +
-        '<div class="countdown-unit"><div class="countdown-num">' + String(mins).padStart(2,'0') + '</div><div class="countdown-unit-label">Mins</div></div>' +
-        '<div class="countdown-divider">:</div>' +
-        '<div class="countdown-unit"><div class="countdown-num">' + String(secs).padStart(2,'0') + '</div><div class="countdown-unit-label">Secs</div></div>' +
-      '</div>' +
-
-    '</div>';
-}
-
-buildCountdown();
-setInterval(buildCountdown, 1000);
-// ==================== END COUNTDOWN ====================
-
-calcInitSelects();
-
 // ==================== SLEEPER API ====================
 const LEAGUE_ID = '1314793814354825216';
+const PREVIOUS_LEAGUE_ID = '1260421436510580736';
 const SLEEPER_BASE = 'https://api.sleeper.app/v1';
 
-// Roster ID to team ID mapping (confirmed from Sleeper)
 const ROSTER_MAP = {
-  1: 'lah', 2: 'sandy', 3: 'miso', 4: 'abab',
-  5: 'amon', 6: 'nflzey', 7: 'killacam', 8: 'otto'
+  1:'lah', 2:'sandy', 3:'miso', 4:'abab',
+  5:'amon', 6:'nflzey', 7:'killacam', 8:'otto'
 };
 
-// Cache player names in memory
-let PLAYER_CACHE = {};
+const TEAM_ABBR = {
+  sandy:'SHL', lah:'LAH', miso:'MISO', amon:'AMON',
+  killacam:'KC', nflzey:'ZEY', otto:'OTTO', abab:'AB'
+};
+
 let SLEEPER_LOADED = false;
+let OWNERSHIP_LOADED = false;
 
 async function sleeperFetch(endpoint) {
   try {
     const res = await fetch(SLEEPER_BASE + endpoint);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) return null;
     return await res.json();
-  } catch(e) {
-    // Silent fail - Sleeper not available in preview mode
-    return null;
-  }
+  } catch(e) { return null; }
 }
 
 async function loadSleeperData() {
   if (SLEEPER_LOADED) return;
   try {
-    // Get NFL state (current week)
-    const state = await sleeperFetch('/state/nfl');
-    const week = state ? state.week : 1;
-    const season = state ? state.season : '2026';
-
-    // Get rosters and users in parallel
     const [rosters, users] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/rosters'),
       sleeperFetch('/league/' + LEAGUE_ID + '/users'),
     ]);
-
-    if (rosters && users) {
-      updateRostersFromSleeper(rosters, users);
-    }
-
-    // Get recent transactions (last 3 weeks)
-    const txPromises = [];
-    for (let w = Math.max(1, week - 2); w <= week; w++) {
-      txPromises.push(sleeperFetch('/league/' + LEAGUE_ID + '/transactions/' + w));
-    }
-    const txResults = await Promise.all(txPromises);
-    const allTx = txResults.flat().filter(Boolean);
-    if (allTx.length) updateTransactionFeed(allTx);
-
+    if (rosters && users) updateRostersFromSleeper(rosters, users);
     SLEEPER_LOADED = true;
-
-  } catch(e) {
-    // Silent fail - Sleeper not available in preview mode
-  }
+  } catch(e) {}
 }
 
 function updateRostersFromSleeper(rosters, users) {
-  // Map owner_id to user info
-  const userMap = {};
-  users.forEach(u => { userMap[u.user_id] = u; });
-
   rosters.forEach(r => {
     const teamId = ROSTER_MAP[r.roster_id];
     const team = TEAMS.find(t => t.id === teamId);
     if (!team) return;
-
-    // Update record from Sleeper
-    const s = r.settings;
-    if (s) {
-      team.sleeperRecord = s.wins + '-' + s.losses;
-      team.sleeperPF = s.fpts + (s.fpts_decimal ? '.' + String(s.fpts_decimal).padStart(2,'0') : '');
+    if (r.settings) {
+      team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
     }
-
-    // Store player IDs for future use
     team.sleeperPlayers = r.players || [];
     team.sleeperStarters = r.starters || [];
   });
-
-  console.log('✅ Rosters updated from Sleeper');
 }
 
-async function updateTransactionFeed(transactions) {
-  // Filter to trades only, sort by most recent
-  const trades = transactions
-    .filter(tx => tx.type === 'trade' && tx.status === 'complete')
-    .sort((a, b) => b.status_updated - a.status_updated)
-    .slice(0, 5);
+async function loadLiveRosters() {
+  try {
+    const [rosters, playersDb] = await Promise.all([
+      sleeperFetch('/league/' + LEAGUE_ID + '/rosters'),
+      sleeperFetch('/players/nfl')
+    ]);
+    if (!rosters || !playersDb) return;
 
-  if (!trades.length) return;
+    const ROSTER_SLOTS = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
 
-  // Add to What's Happening feed
-  const feed = document.getElementById('notifList');
-  if (!feed) return;
+    rosters.forEach(r => {
+      const teamId = ROSTER_MAP[r.roster_id];
+      const team = TEAMS.find(t => t.id === teamId);
+      if (!team) return;
 
-  trades.forEach(tx => {
-    const teams = (tx.roster_ids || []).map(rid => {
-      const team = TEAMS.find(t => t.id === ROSTER_MAP[rid]);
-      return team ? team.name : 'Team ' + rid;
+      if (r.settings) team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+
+      const taxiSet = new Set(r.taxi || []);
+      const starterIds = (r.starters || []).filter(id => id && id !== '0');
+      const allPlayerIds = r.players || [];
+      const liveRoster = [];
+
+      starterIds.forEach((id, idx) => {
+        const slot = ROSTER_SLOTS[idx] || 'BN';
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({slot:slot, name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'starter', pos:pos});
+      });
+
+      taxiSet.forEach(id => {
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({slot:'TX', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'taxi', pos:pos});
+      });
+
+      const starterSet = new Set(starterIds);
+      allPlayerIds.forEach(id => {
+        if (starterSet.has(id) || taxiSet.has(id)) return;
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({slot:'BN', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'bench', pos:pos});
+      });
+
+      if (liveRoster.length > 0) {
+        team.roster = liveRoster;
+        team.liveRosterLoaded = true;
+      }
     });
-    const date = new Date(tx.status_updated).toLocaleDateString();
-    const li = document.createElement('li');
-    li.className = 'notif-item';
-    li.innerHTML = '<span class="notif-dot" style="background:#4df0ff"></span>' +
-      '<div><div class="notif-title">Trade: ' + teams.join(' ↔ ') + '</div>' +
-      '<div class="notif-time">' + date + '</div></div>';
-    feed.prepend(li);
-  });
+
+    const activeBtn = document.querySelector('.team-btn.active');
+    if (activeBtn) selectTeam(activeBtn.dataset.id);
+
+  } catch(e) {}
 }
 
-// Auto-load Sleeper data when hub opens
+async function fetchAllTransactions(leagueId) {
+  const weekPromises = [];
+  for (let w = 1; w <= 18; w++) {
+    weekPromises.push(sleeperFetch('/league/' + leagueId + '/transactions/' + w));
+  }
+  const results = await Promise.all(weekPromises);
+  return results.flat().filter(Boolean);
+}
+
+async function loadOwnershipHistory() {
+  if (OWNERSHIP_LOADED) return;
+  try {
+    const [currentTx, previousTx] = await Promise.all([
+      fetchAllTransactions(LEAGUE_ID),
+      fetchAllTransactions(PREVIOUS_LEAGUE_ID)
+    ]);
+    const allTx = currentTx.concat(previousTx).filter(tx => tx && tx.status === 'complete');
+
+    const ownershipMap = {};
+    window.WAIVER_COUNTS = {};
+
+    function recordOwnership(playerId, rosterId) {
+      if (!ownershipMap[playerId]) ownershipMap[playerId] = new Set();
+      ownershipMap[playerId].add(rosterId);
+    }
+
+    allTx.forEach(tx => {
+      if (tx.adds) {
+        Object.keys(tx.adds).forEach(pid => {
+          recordOwnership(pid, tx.adds[pid]);
+          if (tx.type === 'waiver' || tx.type === 'free_agent') {
+            const tid = ROSTER_MAP[tx.adds[pid]];
+            if (tid) window.WAIVER_COUNTS[tid] = (window.WAIVER_COUNTS[tid] || 0) + 1;
+          }
+        });
+      }
+      if (tx.drops) Object.keys(tx.drops).forEach(pid => recordOwnership(pid, tx.drops[pid]));
+    });
+
+    const playersDb = await sleeperFetch('/players/nfl');
+    if (!playersDb) { OWNERSHIP_LOADED = true; return; }
+
+    function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+
+    Object.keys(ownershipMap).forEach(pid => {
+      const rosterIds = ownershipMap[pid];
+      if (rosterIds.size < 2) return;
+
+      const teamAbbrs = Array.from(rosterIds).map(rid => ROSTER_MAP[rid]).filter(Boolean).map(tid => TEAM_ABBR[tid]).filter(Boolean);
+      if (teamAbbrs.length < 2) return;
+
+      const p = playersDb[pid];
+      if (!p) return;
+      const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
+      const normalizedFull = normalize(fullName);
+
+      TEAMS.forEach(team => {
+        if (!team.roster) return;
+        const currentAbbr = TEAM_ABBR[team.id];
+        team.roster.forEach(rosterPlayer => {
+          if (normalize(rosterPlayer.name) === normalizedFull) {
+            const pastTeams = teamAbbrs.filter(ab => ab !== currentAbbr);
+            if (pastTeams.length > 0) rosterPlayer.ownershipHistory = pastTeams;
+          }
+        });
+      });
+    });
+
+    OWNERSHIP_LOADED = true;
+    const activeBtn = document.querySelector('.team-btn.active');
+    if (activeBtn) selectTeam(activeBtn.dataset.id);
+    computeRosterIdentityBadges();
+
+  } catch(e) {}
+}
+
+function computeRosterIdentityBadges() {
+  try {
+    const teamIds = TEAMS.map(t => t.id);
+
+    // PIMP DADDY - most former players on other rosters
+    const pimpCount = {};
+    teamIds.forEach(tid => pimpCount[tid] = 0);
+    TEAMS.forEach(team => {
+      if (!team.roster) return;
+      team.roster.forEach(p => {
+        if (!p.ownershipHistory) return;
+        p.ownershipHistory.forEach(ab => {
+          const formerTid = Object.keys(TEAM_ABBR).find(k => TEAM_ABBR[k] === ab);
+          if (formerTid && formerTid !== team.id) pimpCount[formerTid] = (pimpCount[formerTid]||0) + 1;
+        });
+      });
+    });
+    const pimpWinner = teamIds.reduce((a,b) => pimpCount[a] >= pimpCount[b] ? a : b);
+
+    // LOYALTY - fewest tagged players
+    const tagCount = {};
+    TEAMS.forEach(team => {
+      var count = 0;
+      if (team.roster) team.roster.forEach(p => { if (p.ownershipHistory && p.ownershipHistory.length > 0) count++; });
+      tagCount[team.id] = count;
+    });
+    const loyaltyWinner = teamIds.reduce((a,b) => tagCount[a] <= tagCount[b] ? a : b);
+
+    // WAIVER WIRE
+    let waiverWinner = null;
+    if (window.WAIVER_COUNTS) {
+      waiverWinner = teamIds.reduce((a,b) => (window.WAIVER_COUNTS[a]||0) >= (window.WAIVER_COUNTS[b]||0) ? a : b);
+    }
+
+    teamIds.forEach(tid => {
+      TBADGES[tid] = (TBADGES[tid]||[]).filter(k => k !== 'PIMPDADDY' && k !== 'WAIREVWIRE');
+    });
+    if (pimpWinner) TBADGES[pimpWinner].push('PIMPDADDY');
+    if (waiverWinner) TBADGES[waiverWinner].push('WAIREVWIRE');
+
+    if (typeof buildHome === 'function') buildHome();
+    const activeBtn = document.querySelector('.team-btn.active');
+    if (activeBtn) selectTeam(activeBtn.dataset.id);
+  } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(loadSleeperData, 500);
+  setTimeout(async function() {
+    await loadSleeperData();
+    await loadLiveRosters();
+    await loadOwnershipHistory();
+  }, 500);
 });
 // ==================== END SLEEPER API ====================
 
+// ==================== OWNERSHIP TAG POPUP ====================
+// Store transaction details per player during ownership history load
+window.OWNERSHIP_TX_DETAILS = {};
 
+// Override loadOwnershipHistory to also store transaction details
+const _origLoadOwnership = loadOwnershipHistory;
+loadOwnershipHistory = async function() {
+  // Run original first
+  await _origLoadOwnership();
 
+  // Now build detailed transaction map: playerName -> [{abbr, type, date, fromTeam}]
+  try {
+    const [currentTx, previousTx] = await Promise.all([
+      fetchAllTransactions(LEAGUE_ID),
+      fetchAllTransactions(PREVIOUS_LEAGUE_ID)
+    ]);
+    const allTx = currentTx.concat(previousTx)
+      .filter(tx => tx && tx.status === 'complete')
+      .sort((a,b) => b.status_updated - a.status_updated);
 
+    const playersDb = await sleeperFetch('/players/nfl');
+    if (!playersDb) return;
+
+    function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+
+    allTx.forEach(tx => {
+      if (!tx.adds) return;
+      const date = new Date(tx.status_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const toRid = Object.values(tx.adds)[0];
+      const toTid = ROSTER_MAP[toRid];
+      const toAbbr = TEAM_ABBR[toTid] || '?';
+
+      let typeLabel = '';
+      if (tx.type === 'trade') {
+        const teams = (tx.roster_ids||[]).map(rid => TEAM_ABBR[ROSTER_MAP[rid]]).filter(Boolean);
+        typeLabel = 'Trade between ' + teams.join(' & ');
+      } else if (tx.type === 'waiver') {
+        typeLabel = 'Waiver claim';
+      } else if (tx.type === 'free_agent') {
+        typeLabel = 'Free agent pickup';
+      } else {
+        typeLabel = 'Added';
+      }
+
+      Object.keys(tx.adds).forEach(pid => {
+        const p = playersDb[pid];
+        if (!p) return;
+        const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
+        const key = normalize(fullName);
+        if (!window.OWNERSHIP_TX_DETAILS[key]) window.OWNERSHIP_TX_DETAILS[key] = [];
+        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, type: typeLabel, date: date});
+      });
+    });
+  } catch(e) {}
+};
+
+function showOwnershipDetail(playerName, teamAbbr) {
+  // Find the popup or create it
+  let popup = document.getElementById('ownershipPopup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'ownershipPopup';
+    popup.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold-dim);border-radius:10px;padding:12px 16px;z-index:400;min-width:240px;max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,0.6)';
+    popup.onclick = function() { this.style.display='none'; };
+    document.body.appendChild(popup);
+  }
+
+  function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+  const key = normalize(playerName);
+  const details = (window.OWNERSHIP_TX_DETAILS[key] || []).filter(d => d.abbr === teamAbbr);
+
+  const teamFullNames = {SHL:'Sandy Hook',LAH:'Lah Kynasty',MISO:'MisoSawC',AMON:'Amon Drugs',KC:'killaCam',ZEY:'NFL Zey',OTTO:'Ottomarion',AB:'Ababineaux'};
+
+  let html = '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:6px">' + playerName.toUpperCase() + ' · ' + teamAbbr + '</div>';
+
+  if (details.length > 0) {
+    details.forEach(d => {
+      html += '<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:6px">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px">' + (teamFullNames[teamAbbr]||teamAbbr) + '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text)">' + d.type + '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim);margin-top:2px">' + d.date + '</div>' +
+        '</div>';
+    });
+  } else {
+    html += '<div style="font-size:11px;color:var(--text-muted);font-style:italic">Transaction details loading...</div>';
+  }
+
+  html += '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--border);text-align:center;margin-top:6px">TAP TO DISMISS</div>';
+  popup.innerHTML = html;
+  popup.style.display = 'block';
+}
+// ==================== END OWNERSHIP TAG POPUP ====================
 
 // ==================== MANAGER PROFILES ====================
 const MANAGER_PROFILES = {
-  sandy: {
-    tagline: "Won a championship and still won't let anyone forget it. Respect.",
-    style: "DYNASTY", styleColor: "bdg-gold",
-    sigMove: "Acquired Jeremiyah Love with the 1.01, then pulled off the Foursome to land CMC + Henry. Two RB1s. At the same time. In the same offseason.",
-    allTime: "20-6 (77%)",
-    champs: "1 Ring (2025)",
-    record25: "12-1",
-    playstyle: "WIN NOW"
-  },
-  lah: {
-    tagline: "Commissioner by title, chess master by nature. The league runs because of him and so does the competition.",
-    style: "DYNASTY", styleColor: "bdg-gold",
-    sigMove: "Flipped JT + Henry for MHJ + Price + Cook + picks + Lemon + Bey. Somehow got all of them. Still acting humble about it.",
-    allTime: "19-7 (73%)",
-    champs: "1 Ring (2024)",
-    record25: "8-5",
-    playstyle: "DYNASTY BUILDER"
-  },
-  miso: {
-    tagline: "Traded the future for Lamar and Chase. No regrets. No picks. No chill.",
-    style: "ALLIN", styleColor: "bdg-red",
-    sigMove: "Gave up 2027 + 2028 first round picks for Lamar Jackson. Either the greatest move in league history or the most expensive lesson.",
-    allTime: "13-13 (50%)",
-    champs: "0 Rings",
-    record25: "8-5",
-    playstyle: "WIN NOW"
-  },
-  amon: {
-    tagline: "Sold Lamar, bought a future. The most patient team in a league full of impulsive traders.",
-    style: "WARCHEST", styleColor: "bdg-blue",
-    sigMove: "Traded Lamar for two future first round picks then quietly built the best QB room in the league. The long game personified.",
-    allTime: "7-19 (27%)",
-    champs: "0 Rings",
-    record25: "5-8",
-    playstyle: "REBUILDING"
-  },
-  killacam: {
-    tagline: "Built the most stacked WR room in league history. Zero picks left to show for it. No regrets, apparently.",
-    style: "ALLIN", styleColor: "bdg-red",
-    sigMove: "Acquired Lamb + Jefferson + Nabers in one offseason. Traded every 2027 pick to do it. The window is 2026 or bust.",
-    allTime: "15-11 (58%)",
-    champs: "0 Rings",
-    record25: "9-4",
-    playstyle: "WIN NOW"
-  },
-  nflzey: {
-    tagline: "Showed up in Year 1, upset the No. 2 seed, and got here by autopicking a kicker. Legend behavior.",
-    style: "GIANTKILL", styleColor: "bdg-purple",
-    sigMove: "5-seed expansion team upsets killaCam in the first round of the playoffs. Year 1. Never been done before.",
-    allTime: "6-7 (46%)",
-    champs: "0 Rings",
-    record25: "6-7",
-    playstyle: "BUILDING"
-  },
-  otto: {
-    tagline: "Skipped the 2026 draft entirely. On purpose. Sitting on 12 picks and two elite rookies. Either a genius or very patient.",
-    style: "WARCHEST", styleColor: "bdg-blue",
-    sigMove: "Traded all 2026 draft capital for 12 future picks. Zero players drafted. Banked Jeanty, Hampton, and enough capital to rebuild the league twice.",
-    allTime: "3-10 (23%)",
-    champs: "0 Rings",
-    record25: "3-10",
-    playstyle: "REBUILDING"
-  },
-  abab: {
-    tagline: "Went 1-12 last year and still showed up to the draft. That's called character. Or stubbornness. Hard to tell.",
-    style: "FREEFALL", styleColor: "bdg-red",
-    sigMove: "Survived the worst season in league history and came back with Barkley, Jacobs, Rice, and McMillan. The bounce back arc is real.",
-    allTime: "8-18 (31%)",
-    champs: "0 Rings",
-    record25: "1-12",
-    playstyle: "BOUNCE BACK"
-  },
+  sandy: {tagline:"Reigning champion and still won't let anyone forget it. Respect.",style:'DYNASTY',styleColor:'bdg-gold',allTime:'20-6 (77%)',champs:'1 Ring (2025)',record25:'12-1',playstyle:'WIN NOW'},
+  lah:   {tagline:"Commissioner by title, chess master by nature. The league runs because of him and so does the competition.",style:'DYNASTY',styleColor:'bdg-gold',allTime:'19-7 (73%)',champs:'1 Ring (2024)',record25:'8-5',playstyle:'DYNASTY BUILDER'},
+  miso:  {tagline:"Traded the future for Lamar and Chase. No regrets. No picks. No chill.",style:'ALLIN',styleColor:'bdg-red',allTime:'13-13 (50%)',champs:'0 Rings',record25:'8-5',playstyle:'WIN NOW'},
+  amon:  {tagline:"Sold Lamar, bought a future. The most patient team in a league full of impulsive traders.",style:'WARCHEST',styleColor:'bdg-blue',allTime:'7-19 (27%)',champs:'0 Rings',record25:'5-8',playstyle:'REBUILDING'},
+  killacam:{tagline:"Built the most stacked WR room in league history. Zero picks left to show for it. No regrets, apparently.",style:'ALLIN',styleColor:'bdg-red',allTime:'15-11 (58%)',champs:'0 Rings',record25:'9-4',playstyle:'WIN NOW'},
+  nflzey:{tagline:"Showed up in Year 1, upset the No. 2 seed, and got here by autopicking a kicker. Legend behavior.",style:'GIANTKILL',styleColor:'bdg-purple',allTime:'6-7 (46%)',champs:'0 Rings',record25:'6-7',playstyle:'BUILDING'},
+  otto:  {tagline:"Skipped the 2026 draft entirely. On purpose. Sitting on 12 picks and two elite rookies. Either a genius or very patient.",style:'WARCHEST',styleColor:'bdg-blue',allTime:'3-10 (23%)',champs:'0 Rings',record25:'3-10',playstyle:'REBUILDING'},
+  abab:  {tagline:"Went 1-12 last year and still showed up to the draft. That is called character. Or stubbornness. Hard to tell.",style:'FREEFALL',styleColor:'bdg-red',allTime:'8-18 (31%)',champs:'0 Rings',record25:'1-12',playstyle:'BOUNCE BACK'},
 };
 
 function openProfile(teamId) {
@@ -1455,32 +1308,26 @@ function openProfile(teamId) {
   const p = MANAGER_PROFILES[teamId];
   if (!t || !p) return;
 
-  // Avatar - use team logo
   document.getElementById('profileAvatar').innerHTML = logo(teamId, 60);
   document.getElementById('profileName').textContent = t.name;
-  document.getElementById('profileHandle').textContent = '@' + t.owner + ' · Dynasty Rank #' + ({sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7}[teamId] || '?') + ' of 8';
+  const dynRanks = {sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7};
+  document.getElementById('profileHandle').textContent = '@' + t.owner + ' · Dynasty Rank #' + (dynRanks[teamId]||'?') + ' of 8';
   document.getElementById('profileTagline').textContent = p.tagline;
 
-  // Stats
-  var rec24 = t.record2024 ? '<div class="profile-stat"><div class="profile-stat-num">' + t.record2024 + '</div><div class="profile-stat-lbl">2024 RECORD</div></div>' : '';
+  const rec24 = t.record2024 ? '<div class="profile-stat"><div class="profile-stat-num">' + t.record2024 + '</div><div class="profile-stat-lbl">2024 RECORD</div></div>' : '';
   document.getElementById('profileStats').innerHTML =
     '<div class="profile-stat"><div class="profile-stat-num">' + p.allTime + '</div><div class="profile-stat-lbl">ALL TIME</div></div>' +
     '<div class="profile-stat"><div class="profile-stat-num">' + p.record25 + '</div><div class="profile-stat-lbl">2025 RECORD</div></div>' +
     rec24 +
     '<div class="profile-stat"><div class="profile-stat-num" style="color:var(--gold)">' + p.champs + '</div><div class="profile-stat-lbl">HARDWARE</div></div>';
 
-  // Play style
-  var dynRanks = {sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7};
   document.getElementById('profileStyle').innerHTML =
     '<span class="profile-style-tag tag ' + p.styleColor + '">' + p.playstyle + '</span>' +
     '<span class="tag tg">' + t.ovr + ' OVR</span>' +
     '<span class="tag tg">PWR #' + t.rank + '</span>' +
-    '<span class="tag tg">DYN #' + (dynRanks[teamId] || '?') + '</span>';
+    '<span class="tag tg">DYN #' + (dynRanks[teamId]||'?') + '</span>';
 
-  // Badges
   document.getElementById('profileBadges').innerHTML = renderBadges(teamId, 'normal');
-
-  // Open overlay
   document.getElementById('profileOverlay').classList.add('open');
 }
 
@@ -1493,302 +1340,199 @@ function closeProfile(e) {
 }
 // ==================== END MANAGER PROFILES ====================
 
+// ==================== NOTIFICATIONS ====================
+var FEED = [
+  {type:'trade', icon:'🔄', title:'The Foursome -- Lah sends Henry for Cook', sub:'Part of the 4-team blockbuster. Lah sent Derrick Henry + 2027 2nd to get James Cook. Sandy received CMC + Henry. killaCam received CeeDee Lamb + Cam Skattebo. Otto stacked future capital.', time:'Apr 30, 2026'},
+  {type:'trade', icon:'🔄', title:'MisoSawC trades for Lamar Jackson', sub:'MisoSawC sent Bijan Robinson + 2027 1st + 2028 1st to Amon Drugs for Lamar Jackson. Zero future first round picks remain for Miso. Win now or bust.', time:'Apr 29, 2026'},
+  {type:'trade', icon:'🔄', title:'Lah acquires MHJ + Jadarian Price from killaCam', sub:'Lah sent Jonathan Taylor + Christian Watson + Otto 2026 3rd to killaCam. Received Marvin Harrison Jr. + 1.05 pick (became Jadarian Price) + 2027 2nd + 2027 3rd.', time:'Apr 23, 2026'},
+  {type:'trade', icon:'🔄', title:'Lah trades kicker to Otto for picks', sub:'Lah sent Cam Little (K) + 2027 3rd to Ottomarion Empire. Otto sent 2026 3rd + 2027 3rd back to Lah. Capital stacking on both sides.', time:'Apr 23, 2026'},
+  {type:'trade', icon:'🔄', title:'Sandy sends CMC + Henry to Otto for picks', sub:'Sandy Hook sent CMC and Derrick Henry to Ottomarion Empire in exchange for Otto 2026 1st + 2026 2nd. Sandy banked picks -- then got CMC right back in The Foursome.', time:'Apr 22, 2026'},
+  {type:'news', icon:'📋', title:'Lah drops Kyle Pitts, adds George Kittle', sub:'Commissioner makes a TE swap -- releases Kyle Pitts and picks up George Kittle off the free agent wire.', time:'Jun 8, 2026'},
+  {type:'news', icon:'📋', title:'Ottomarion adds Kyle Pitts + Tre Harris + Oscar Delp', sub:'Otto picks up Kyle Pitts (dropped by Lah), Tre Harris, and Oscar Delp. Capital hoarding meets roster building.', time:'Jun 2026'},
+  {type:'news', icon:'📋', title:'killaCam drops Alvin Kamara, adds Stefon Diggs', sub:'killaCam releases Kamara and picks up Stefon Diggs. WR room shuffle for the win-now window.', time:'Jun 2026'},
+  {type:'news', icon:'🏆', title:'First waiver claim -- Miso wins Josh Downs for $2', sub:'MisoSawC wins the first waiver claim of 2026, picking up Josh Downs for $2 after killaCam dropped him.', time:'May 1, 2026'},
+  {type:'news', icon:'📢', title:'2026 Season is here!', sub:'Delinquent Dynasty III kicks off Season 3. 8 teams, $175 on the line.', time:'Season 3 -- 2026'},
+  {type:'injury', icon:'🚨', title:'Malik Nabers placed on IR', sub:'killaCam loses their WR2 before the season even starts. Brutal blow for a team already without 2027 picks.', time:'Preseason 2026'},
+  {type:'news', icon:'👑', title:'Sandy Hook wins Season 2 championship', sub:'12-1 regular season. Dominant championship run. Revenge tour complete after 2024 finals loss to Lah.', time:'Jan 2026'},
+  {type:'news', icon:'⚡', title:'NFL Zey upsets killaCam in the playoffs', sub:'5-seed expansion team in Year 1 takes down the No. 2 seed in the first round. One of the best upsets in league history.', time:'Playoffs 2025'},
+];
 
-// ==================== LIVE ROSTER SYSTEM v2 ====================
-// Roster slot order confirmed from Sleeper league settings
-const ROSTER_SLOTS = ["QB","QB","RB","RB","RB","WR","WR","WR","TE","WRT","WRT","WRT","K"];
-const BENCH_COUNT = 8; // BN slots
-
-async function loadLiveRosters() {
-  try {
-    const [rosters, playersDb] = await Promise.all([
-      sleeperFetch('/league/' + LEAGUE_ID + '/rosters'),
-      sleeperFetch('/players/nfl')
-    ]);
-    if (!rosters || !playersDb) return;
-
-    rosters.forEach(r => {
-      const teamId = ROSTER_MAP[r.roster_id];
-      const team = TEAMS.find(t => t.id === teamId);
-      if (!team) return;
-
-      // Update W-L record
-      if (r.settings) {
-        team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
-      }
-
-      const taxiSet = new Set(r.taxi || []);
-      const starterIds = (r.starters || []).filter(id => id && id !== '0');
-      const allPlayerIds = r.players || [];
-
-      const liveRoster = [];
-
-      // Add starters in exact slot order
-      starterIds.forEach((id, idx) => {
-        const slot = ROSTER_SLOTS[idx] || 'BN';
-        const p = playersDb[id];
-        if (!p) return;
-        var pos = p.position || 'BN';
-        if (pos === 'PK') pos = 'K';
-        liveRoster.push({
-          slot: slot,
-          name: p.full_name || (p.first_name + ' ' + p.last_name),
-          nfl: p.team || 'FA',
-          age: p.age || 0,
-          value: 0,
-          type: 'starter',
-          pos: pos
-        });
-      });
-
-      // Add taxi squad
-      taxiSet.forEach(id => {
-        const p = playersDb[id];
-        if (!p) return;
-        var pos = p.position || 'BN';
-        if (pos === 'PK') pos = 'K';
-        liveRoster.push({
-          slot: 'TX',
-          name: p.full_name || (p.first_name + ' ' + p.last_name),
-          nfl: p.team || 'FA',
-          age: p.age || 0,
-          value: 0,
-          type: 'taxi',
-          pos: pos
-        });
-      });
-
-      // Add bench (non-starter, non-taxi)
-      const starterSet = new Set(starterIds);
-      allPlayerIds.forEach(id => {
-        if (starterSet.has(id) || taxiSet.has(id)) return;
-        const p = playersDb[id];
-        if (!p) return;
-        var pos = p.position || 'BN';
-        if (pos === 'PK') pos = 'K';
-        liveRoster.push({
-          slot: 'BN',
-          name: p.full_name || (p.first_name + ' ' + p.last_name),
-          nfl: p.team || 'FA',
-          age: p.age || 0,
-          value: 0,
-          type: 'bench',
-          pos: pos
-        });
-      });
-
-      if (liveRoster.length > 0) {
-        team.roster = liveRoster;
-        team.liveRosterLoaded = true;
-      }
-    });
-
-    // Re-render active roster if on rosters tab
-    const activeBtn = document.querySelector('.team-btn.active');
-    if (activeBtn) selectTeam(activeBtn.dataset.id);
-
-  } catch(e) {
-    // Silent fail - keep static roster data
-  }
+function openNotif(){
+  document.getElementById('notifPanel').classList.add('open');
+  document.getElementById('notifOverlay').classList.add('open');
+  document.getElementById('notifDot').style.display='none';
+  buildNotifFeed();
+  document.body.style.overflow='hidden';
 }
 
-// Hook into main Sleeper load
-const _origSleeperLoad = loadSleeperData;
-loadSleeperData = async function() {
-  await _origSleeperLoad();
-  await loadLiveRosters();
-  await loadOwnershipHistory();
-};
-// ==================== END LIVE ROSTER SYSTEM v2 ====================
-
-
-// ==================== MULTI-TEAM OWNERSHIP HISTORY ====================
-const PREVIOUS_LEAGUE_ID = '1260421436510580736'; // Season 2 (2025) league
-const TEAM_ABBR = {
-  sandy: 'SHL', lah: 'LAH', miso: 'MISO', amon: 'AMON',
-  killacam: 'KC', nflzey: 'ZEY', otto: 'OTTO', abab: 'AB'
-};
-
-let OWNERSHIP_LOADED = false;
-
-async function fetchAllTransactions(leagueId) {
-  // Sleeper transactions are paginated by week. Fetch a generous range in parallel.
-  const weekPromises = [];
-  for (let w = 1; w <= 18; w++) {
-    weekPromises.push(sleeperFetch('/league/' + leagueId + '/transactions/' + w));
-  }
-  const results = await Promise.all(weekPromises);
-  return results.flat().filter(Boolean);
+function closeNotif(){
+  document.getElementById('notifPanel').classList.remove('open');
+  document.getElementById('notifOverlay').classList.remove('open');
+  document.body.style.overflow='';
 }
 
-async function loadOwnershipHistory() {
-  if (OWNERSHIP_LOADED) return;
-  try {
-    // Pull transactions from both this season and last season
-    const [currentTx, previousTx] = await Promise.all([
-      fetchAllTransactions(LEAGUE_ID),
-      fetchAllTransactions(PREVIOUS_LEAGUE_ID)
-    ]);
-    const allTx = [].concat(currentTx, previousTx).filter(tx => tx && tx.status === 'complete');
+function buildNotifFeed(){
+  const list = document.getElementById('notifFeed');
+  if (!list || list.children.length > 0) return;
+  FEED.forEach(function(item) {
+    const div = document.createElement('div');
+    div.className = 'notif-item';
+    div.innerHTML = '<div class="notif-item-icon">' + item.icon + '</div>' +
+      '<div class="notif-item-body">' +
+      '<div class="notif-item-title">' + item.title + '</div>' +
+      '<div class="notif-item-sub">' + item.sub + '</div>' +
+      '<div class="notif-item-time">' + item.time + '</div>' +
+      '</div>';
+    list.appendChild(div);
+  });
+}
+// ==================== END NOTIFICATIONS ====================
 
-    // Build map: playerId -> Set of roster_ids who have ever held that player
-    const ownershipMap = {};
-    window.WAIVER_COUNTS = {};
-    function recordOwnership(playerId, rosterId) {
-      if (!ownershipMap[playerId]) ownershipMap[playerId] = new Set();
-      ownershipMap[playerId].add(rosterId);
+// ==================== SCOREBOARD ====================
+let SCOREBOARD_LOADED = false;
+
+async function buildScoreboard() {
+  if (SCOREBOARD_LOADED) return;
+  try {
+    // Get current NFL state
+    const state = await sleeperFetch('/state/nfl');
+    if (!state) return;
+
+    const week = state.week || 1;
+    const season = state.season || '2026';
+    const inSeason = state.season_type === 'regular' || state.season_type === 'post';
+
+    document.getElementById('scoreWeekLabel').textContent =
+      inSeason ? season + ' Season · Week ' + week : '2026 Season · Preseason · Sep 5 Kickoff';
+
+    // Countdown to season
+    const kickoff = new Date('2026-09-05T13:00:00');
+    const now = new Date();
+    const diff = kickoff - now;
+    const countEl = document.getElementById('scoreCountdown');
+    if (countEl && diff > 0) {
+      const days = Math.floor(diff / 86400000);
+      const hrs = Math.floor((diff % 86400000) / 3600000);
+      countEl.textContent = days + ' days ' + hrs + ' hours until kickoff';
     }
 
-    allTx.forEach(tx => {
-      // adds: {playerId: rosterId} covers free_agent, waiver, commissioner, and trade adds
-      if (tx.adds) {
-        Object.keys(tx.adds).forEach(pid => {
-          recordOwnership(pid, tx.adds[pid]);
-          // Track waiver and free agent adds per team for WAIVER WIRE badge
-          if (tx.type === 'waiver' || tx.type === 'free_agent') {
-            const tid = ROSTER_MAP[tx.adds[pid]];
-            if (tid) window.WAIVER_COUNTS[tid] = (window.WAIVER_COUNTS[tid] || 0) + 1;
-          }
-        });
-      }
-      // drops also confirm a player was on that roster at some point
-      if (tx.drops) {
-        Object.keys(tx.drops).forEach(pid => recordOwnership(pid, tx.drops[pid]));
-      }
+    if (!inSeason) return; // Stay on placeholder if preseason
+
+    // Fetch current week matchups
+    const matchups = await sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week);
+    if (!matchups || !matchups.length) return;
+
+    // Fetch projections for this week
+    const projections = await sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K');
+
+    // Group matchups by matchup_id
+    const byMatchup = {};
+    matchups.forEach(m => {
+      if (!byMatchup[m.matchup_id]) byMatchup[m.matchup_id] = [];
+      byMatchup[m.matchup_id].push(m);
     });
 
-    const playersDb = await sleeperFetch('/players/nfl');
-    if (!playersDb) { OWNERSHIP_LOADED = true; return; }
+    const teamNames = {sandy:'Sandy Hook',lah:'Lah Kynasty',miso:'MisoSawC',amon:'Amon Drugs',
+      killacam:'killaCam',nflzey:'NFL Zey',otto:'Ottomarion',abab:'Ababineaux'};
+    const teamAbbr = {sandy:'SHL',lah:'LAH',miso:'MISO',amon:'AMON',
+      killacam:'KC',nflzey:'ZEY',otto:'OTTO',abab:'AB'};
 
-    // For every player with 2+ distinct team owners, attach history to the matching
-    // player object on each team's CURRENT roster (only if that player is rostered now).
-    Object.keys(ownershipMap).forEach(pid => {
-      const rosterIds = ownershipMap[pid];
-      if (rosterIds.size < 2) return; // only multi-team players matter
-
-      const teamAbbrs = Array.from(rosterIds)
-        .map(rid => ROSTER_MAP[rid])
-        .filter(Boolean)
-        .map(tid => TEAM_ABBR[tid])
-        .filter(Boolean);
-
-      if (teamAbbrs.length < 2) return;
-
-      const p = playersDb[pid];
-      if (!p) return;
-      const fullName = p.full_name || ((p.first_name || '') + ' ' + (p.last_name || ''));
-      const normalize = s => (s || '').toLowerCase().replace(/[^a-z]/g, '');
-      const normalizedFull = normalize(fullName);
-
-      // Find this player on any current roster by matching normalized name.
-      // Exclude the player's CURRENT team from their own displayed history tags.
-      TEAMS.forEach(team => {
-        if (!team.roster) return;
-        const currentAbbr = TEAM_ABBR[team.id];
-        team.roster.forEach(rosterPlayer => {
-          if (normalize(rosterPlayer.name) === normalizedFull) {
-            const pastTeams = teamAbbrs.filter(ab => ab !== currentAbbr);
-            if (pastTeams.length > 0) {
-              rosterPlayer.ownershipHistory = pastTeams;
-            }
-          }
-        });
+    // Build projected score per roster using starters + projections
+    function getProjected(entry) {
+      if (!projections) return entry.points || 0;
+      var proj = 0;
+      (entry.starters || []).forEach(function(pid) {
+        if (pid === '0') return;
+        var p = projections[pid];
+        if (p && p.pts_ppr) proj += p.pts_ppr;
       });
-    });
-
-    OWNERSHIP_LOADED = true;
-
-    // Re-render active roster tab if currently viewing one, so badges appear immediately
-    const activeBtn = document.querySelector('.team-btn.active');
-    if (activeBtn) selectTeam(activeBtn.dataset.id);
-
-    // Compute dynamic roster identity badges
-    computeRosterIdentityBadges();
-
-  } catch(e) {
-    // Silent fail - ownership history is a bonus feature, never break the hub
-  }
-}
-// ==================== END MULTI-TEAM OWNERSHIP HISTORY ====================
-
-
-// ==================== ROSTER IDENTITY BADGES ====================
-function computeRosterIdentityBadges() {
-  try {
-    var teamIds = TEAMS.map(function(t) { return t.id; });
-
-    // --- PIMP DADDY ---
-    // Count how many players on OTHER teams' rosters were formerly on each team
-    var pimpCount = {};
-    teamIds.forEach(function(tid) { pimpCount[tid] = 0; });
-
-    TEAMS.forEach(function(team) {
-      if (!team.roster) return;
-      team.roster.forEach(function(p) {
-        if (!p.ownershipHistory) return;
-        p.ownershipHistory.forEach(function(ab) {
-          // Find which team this abbreviation belongs to
-          var formerTid = Object.keys(TEAM_ABBR).find(function(k) { return TEAM_ABBR[k] === ab; });
-          if (formerTid && formerTid !== team.id) {
-            pimpCount[formerTid] = (pimpCount[formerTid] || 0) + 1;
-          }
-        });
-      });
-    });
-
-    var pimpWinner = teamIds.reduce(function(a, b) { return pimpCount[a] >= pimpCount[b] ? a : b; });
-
-    // --- LOYALTY ---
-    // Count how many players on each team have ownership history tags (lower = more loyal)
-    var tagCount = {};
-    TEAMS.forEach(function(team) {
-      var count = 0;
-      if (team.roster) {
-        team.roster.forEach(function(p) {
-          if (p.ownershipHistory && p.ownershipHistory.length > 0) count++;
-        });
-      }
-      tagCount[team.id] = count;
-    });
-
-    var loyaltyWinner = teamIds.reduce(function(a, b) { return tagCount[a] <= tagCount[b] ? a : b; });
-
-    // --- WAIVER WIRE ---
-    // Use the waiver transaction data already stored in WAIVER_COUNTS if available
-    // Otherwise fall back to whichever team we can determine from ownership map
-    // For now use a stored count if loadOwnershipHistory populated it
-    var waiverWinner = null;
-    if (window.WAIVER_COUNTS) {
-      waiverWinner = teamIds.reduce(function(a, b) {
-        return (window.WAIVER_COUNTS[a] || 0) >= (window.WAIVER_COUNTS[b] || 0) ? a : b;
-      });
+      return Math.round(proj * 10) / 10;
     }
 
-    // --- Apply badges dynamically ---
-    // Remove old dynamic identity badges first
-    teamIds.forEach(function(tid) {
-      TBADGES[tid] = (TBADGES[tid] || []).filter(function(k) {
-        return k !== 'PIMPDADDY' && k !== 'LOYALTY' && k !== 'WAIREVWIRE';
-      });
+    // Generate short storyline
+    function storyline(tidA, tidB, projA, projB) {
+      const tA = TEAMS.find(t => t.id === tidA);
+      const tB = TEAMS.find(t => t.id === tidB);
+      if (!tA || !tB) return '';
+
+      const lines = [];
+
+      // Records
+      const recA = tA.sleeperRecord || tA.record2025 || '0-0';
+      const recB = tB.sleeperRecord || tB.record2025 || '0-0';
+      lines.push(teamNames[tidA] + ' (' + recA + ') vs ' + teamNames[tidB] + ' (' + recB + ').');
+
+      // OVR matchup
+      if (tA.ovr && tB.ovr) {
+        const edge = tA.ovr > tB.ovr ? teamNames[tidA] : teamNames[tidB];
+        lines.push(edge + ' holds the roster edge with higher OVR.');
+      }
+
+      // Dynasty angle
+      const dynRanks = {sandy:3,lah:2,miso:5,amon:4,killacam:6,nflzey:8,otto:1,abab:7};
+      const drA = dynRanks[tidA]; const drB = dynRanks[tidB];
+      if (drA <= 2) lines.push(teamNames[tidA] + ' is a dynasty powerhouse (#' + drA + ').');
+      else if (drB <= 2) lines.push(teamNames[tidB] + ' is a dynasty powerhouse (#' + drB + ').');
+
+      // Projection edge
+      const edge = projA > projB ? teamNames[tidA] : teamNames[tidB];
+      const diff = Math.abs(projA - projB).toFixed(1);
+      lines.push('Projected edge: ' + edge + ' by ' + diff + ' pts.');
+
+      return lines.join(' ');
+    }
+
+    let html = '';
+    Object.values(byMatchup).forEach(function(pair) {
+      if (pair.length !== 2) return;
+      const [a, b] = pair;
+      const tidA = ROSTER_MAP[a.roster_id];
+      const tidB = ROSTER_MAP[b.roster_id];
+      if (!tidA || !tidB) return;
+
+      const projA = getProjected(a);
+      const projB = getProjected(b);
+      const isLive = a.points > 0 || b.points > 0;
+      const scoreA = isLive ? a.points.toFixed(1) : projA.toFixed(1);
+      const scoreB = isLive ? b.points.toFixed(1) : projB.toFixed(1);
+      const scoreLabel = isLive ? 'LIVE' : 'PROJ';
+      const winA = parseFloat(scoreA) > parseFloat(scoreB);
+
+      html += '<div class="card" style="margin-bottom:12px">' +
+        '<div style="padding:14px">' +
+        '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px">WEEK ' + week + ' · ' + scoreLabel + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div style="text-align:left">' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + (winA?'var(--gold)':'var(--text)') + '">' + teamNames[tidA] + '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim)">' + teamAbbr[tidA] + '</div>' +
+        '</div>' +
+        '<div style="text-align:center">' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--gold)">' + scoreA + '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:7px;color:var(--text-dim)">vs</div>' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--gold)">' + scoreB + '</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+        '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + (!winA?'var(--gold)':'var(--text)') + '">' + teamNames[tidB] + '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim)">' + teamAbbr[tidB] + '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);line-height:1.6;border-top:1px solid var(--border);padding-top:8px;margin-top:4px">' + storyline(tidA, tidB, projA, projB) + '</div>' +
+        '</div></div>';
     });
 
-    if (pimpWinner) TBADGES[pimpWinner].push('PIMPDADDY');
-    if (loyaltyWinner) TBADGES[loyaltyWinner].push('LOYALTY');
-    if (waiverWinner) TBADGES[waiverWinner].push('WAIREVWIRE');
+    if (html) {
+      document.getElementById('matchupList').innerHTML = html;
+      // Hide the preseason placeholder card
+      const placeholder = document.querySelector('#scoreboardContent > .card');
+      if (placeholder) placeholder.style.display = 'none';
+    }
 
-    // Re-render power rankings and active roster to show updated badges
-    if (typeof buildHome === 'function') buildHome();
-    var activeBtn = document.querySelector('.team-btn.active');
-    if (activeBtn) selectTeam(activeBtn.dataset.id);
-
+    SCOREBOARD_LOADED = true;
   } catch(e) {
-    // Silent fail - badges are a bonus, never break the hub
+    // Silent fail - placeholder stays visible
   }
 }
-
-
-
-
+// ==================== END SCOREBOARD ====================
 
 </script>
 
@@ -1844,12 +1588,6 @@ function computeRosterIdentityBadges() {
     <div class="profile-style" id="profileStyle"></div>
 
     <div style="margin-top:12px" id="profileBadges"></div>
-  </div>
-</div>
-  <div style="flex:1;overflow:hidden;">
-    <div class="ticker-track" id="tickerTrack">
-      <span class="ticker-item">Loading league activity...</span>
-    </div>
   </div>
 </div>
 </body>
