@@ -1190,6 +1190,12 @@ async function loadOwnershipHistory() {
         window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, how: typeLabel, date: date});
       });
     });
+    const detailCount = Object.keys(window.OWNERSHIP_TX_DETAILS).length;
+    console.log('TX Details built for ' + detailCount + ' players');
+    if (detailCount > 0) {
+      const sample = Object.keys(window.OWNERSHIP_TX_DETAILS)[0];
+      console.log('Sample:', sample, JSON.stringify(window.OWNERSHIP_TX_DETAILS[sample][0]));
+    }
 
   } catch(e) {}
 }
@@ -1626,3 +1632,4 @@ async function buildScoreboard() {
 </div>
 </body>
 </html>
+
