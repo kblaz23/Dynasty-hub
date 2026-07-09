@@ -855,7 +855,7 @@ function buildRoster(){
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
         <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
-        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span class="own-tags-wrap">'+p.ownershipHistory.map((ab,i)=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+ab+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" data-history="'+p.ownershipHistory.join(',')+'" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span></span>':''}
+        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span class="own-tags-wrap">'+p.ownershipHistory.map((ab,i)=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+ab+'\',\''+( p.ownershipTx?p.ownershipTx.how:'')+'\',\''+( p.ownershipTx?p.ownershipTx.date:'')+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span></span>':''}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
@@ -1151,7 +1151,13 @@ async function loadOwnershipHistory() {
         team.roster.forEach(rosterPlayer => {
           if (normalize(rosterPlayer.name) === normalizedFull) {
             const pastTeams = teamAbbrs.filter(ab => ab !== currentAbbr);
-            if (pastTeams.length > 0) rosterPlayer.ownershipHistory = pastTeams;
+            if (pastTeams.length > 0) {
+              rosterPlayer.ownershipHistory = pastTeams;
+              // Attach transaction detail directly to player
+              const txKey = normalize(rosterPlayer.name);
+              const txData = window.OWNERSHIP_TX_DETAILS[txKey];
+              if (txData) rosterPlayer.ownershipTx = txData[0];
+            }
           }
         });
       });
@@ -1162,29 +1168,8 @@ async function loadOwnershipHistory() {
     if (activeBtn) selectTeam(activeBtn.dataset.id);
     computeRosterIdentityBadges();
 
-    // Build transaction detail map - hardcoded from known transactions
-    // since Sleeper offseason weeks return empty arrays
-    window.OWNERSHIP_TX_DETAILS = {
-      'jamescook':          [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
-      'buckyirving':        [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
-      'marvinharrisonjr':   [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
-      'jadarianprice':      [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
-      'christianmccaffrey': [{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
-      'derrickhenry':       [{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
-      'jaxonsmithnjigba':   [{abbr:'SHL', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
-      'lamarjackson':       [{abbr:'MISO', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
-      'bijanrobinson':      [{abbr:'AMON', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
-      'ceedeelamb':         [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
-      'camskattebo':        [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
-      'kylepitts':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
-      'treharris':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
-      'oscardelp':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
-      'stefondiggs':        [{abbr:'KC', how:'Added to roster', date:'Jun 2026'}],
-      'georgekittle':       [{abbr:'LAH', how:'Added to roster', date:'Jun 2026'}],
-      'joshdowns':          [{abbr:'MISO', how:'Acquired off waivers for $2', date:'May 1, 2026'}],
-      'travishunter':       [{abbr:'MISO', how:'Added to roster', date:'Jun 2026'}],
-    };
-    console.log('TX Details built for ' + Object.keys(window.OWNERSHIP_TX_DETAILS).length + ' players');
+    // Build transaction detail map - hardcoded known transactions
+    // (initialized at page load above, no need to rebuild here)
 
   } catch(e) {
     console.log('loadOwnershipHistory error:', e.message, e.stack);
@@ -1247,52 +1232,48 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== END SLEEPER API ====================
 
 // ==================== OWNERSHIP TAG POPUP ====================
-window.OWNERSHIP_TX_DETAILS = {};
+// Hardcoded transaction details - set immediately on load
+window.OWNERSHIP_TX_DETAILS = {
+  'jamescook':          [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
+  'buckyirving':        [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
+  'marvinharrisonjr':   [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
+  'jadarianprice':      [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
+  'christianmccaffrey': [{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
+  'derrickhenry':       [{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
+  'jaxonsmithnjigba':   [{abbr:'SHL', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+  'lamarjackson':       [{abbr:'MISO', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
+  'bijanrobinson':      [{abbr:'AMON', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
+  'ceedeelamb':         [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+  'camskattebo':        [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+  'kylepitts':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+  'treharris':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+  'oscardelp':          [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+  'stefondiggs':        [{abbr:'KC', how:'Added to roster', date:'Jun 2026'}],
+  'georgekittle':       [{abbr:'LAH', how:'Added to roster', date:'Jun 2026'}],
+  'joshdowns':          [{abbr:'MISO', how:'Acquired off waivers for $2', date:'May 1, 2026'}],
+  'travishunter':       [{abbr:'MISO', how:'Added to roster', date:'Jun 2026'}],
+};
 
-function showOwnershipDetail(playerName, nflTeam, tappedAbbr) {
-  // Read ownership history from the clicked element's data attribute
-  const clickedEl = event.target;
-  const historyStr = clickedEl ? clickedEl.getAttribute('data-history') : '';
-  const ownershipHistory = historyStr ? historyStr.split(',') : [];
-
-  function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
-  const key = normalize(playerName);
-  const allDetails = window.OWNERSHIP_TX_DETAILS[key] || [];
-
+function showOwnershipDetail(playerName, nflTeam, tappedAbbr, txHow, txDate) {
   const teamFullNames = {SHL:'Sandy Hook',LAH:'Lah Kynasty',MISO:'MisoSawC',AMON:'Amon Drugs',KC:'killaCam',ZEY:'NFL Zey',OTTO:'Ottomarion',AB:'Ababineaux'};
 
-  // Find current team's acquisition using tapped abbreviation
-  const currentTeamEl = document.querySelector('.team-btn.active');
-  const currentTid = currentTeamEl ? currentTeamEl.dataset.id : null;
-  const currentAbbr = currentTid ? (TEAM_ABBR||{sandy:'SHL',lah:'LAH',miso:'MISO',amon:'AMON',killacam:'KC',nflzey:'ZEY',otto:'OTTO',abab:'AB'})[currentTid] : null;
-
-  // Get the most recent acquisition for current team
-  const currentAcq = allDetails.filter(d => d.abbr === currentAbbr)[0];
-
-  // Previous owners = all tags except the one currently tapped (which is a past team)
-  const prevOwners = (ownershipHistory || []);
-
-  // Populate panel
   document.getElementById('ownershipPlayerName').textContent = playerName + ' | ' + nflTeam;
   document.getElementById('ownershipPlayerTeam').textContent = '';
 
-  // Acquisition first
   const acqEl = document.getElementById('ownershipAcquisition');
-  if (currentAcq) {
+  if (txHow) {
     acqEl.innerHTML =
-      '<div class="ownership-how">' + currentAcq.how + '</div>' +
-      '<div class="ownership-date">' + currentAcq.date + '</div>';
+      '<div class="ownership-how">' + txHow + '</div>' +
+      (txDate ? '<div class="ownership-date">' + txDate + '</div>' : '');
   } else {
-    acqEl.innerHTML =
-      '<div class="ownership-how" style="color:var(--text-dim)">Transaction details loading...</div>';
+    acqEl.innerHTML = '<div class="ownership-how" style="color:var(--text-dim)">No transaction data available</div>';
   }
 
-  // Previous owners below
   const prevEl = document.getElementById('ownershipPrevOwners');
-  if (prevOwners.length > 0) {
+  if (tappedAbbr) {
     prevEl.innerHTML = '<div class="ownership-row">' +
       '<div class="ownership-label">PREVIOUSLY OWNED BY</div>' +
-      '<div class="ownership-value">' + prevOwners.map(ab => teamFullNames[ab]||ab).join(', ') + '</div>' +
+      '<div class="ownership-value">' + (teamFullNames[tappedAbbr]||tappedAbbr) + '</div>' +
       '</div>';
   } else {
     prevEl.innerHTML = '';
