@@ -1162,40 +1162,29 @@ async function loadOwnershipHistory() {
     if (activeBtn) selectTeam(activeBtn.dataset.id);
     computeRosterIdentityBadges();
 
-    // Build transaction detail map for clickable tags using same data
-    window.OWNERSHIP_TX_DETAILS = {};
-    const teamFullNamesLocal = {sandy:'Sandy Hook',lah:'Lah Kynasty',miso:'MisoSawC',amon:'Amon Drugs',killacam:'killaCam',nflzey:'NFL Zey',otto:'Ottomarion',abab:'Ababineaux'};
-    allTx.sort((a,b) => b.status_updated - a.status_updated).forEach(tx => {
-      if (!tx.adds) return;
-      const date = new Date(tx.status_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      let typeLabel = '';
-      if (tx.type === 'trade') {
-        const teams = (tx.roster_ids||[]).map(rid => teamFullNamesLocal[ROSTER_MAP[rid]]).filter(Boolean);
-        typeLabel = 'Acquired via trade (' + teams.join(' x ') + ')';
-      } else if (tx.type === 'waiver') {
-        const bid = tx.metadata && tx.metadata.waiver_bid_amount != null ? tx.metadata.waiver_bid_amount : null;
-        typeLabel = bid !== null ? 'Acquired off waivers for $' + bid : 'Acquired off waivers';
-      } else if (tx.type === 'free_agent') {
-        typeLabel = 'Added to roster';
-      } else {
-        typeLabel = 'Added to roster';
-      }
-      Object.keys(tx.adds).forEach(pid => {
-        const p = playersDb[pid];
-        if (!p) return;
-        const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
-        const key = normalize(fullName);
-        const toAbbr = TEAM_ABBR[ROSTER_MAP[tx.adds[pid]]] || '?';
-        if (!window.OWNERSHIP_TX_DETAILS[key]) window.OWNERSHIP_TX_DETAILS[key] = [];
-        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, how: typeLabel, date: date});
-      });
-    });
-    const detailCount = Object.keys(window.OWNERSHIP_TX_DETAILS).length;
-    console.log('TX Details built for ' + detailCount + ' players');
-    if (detailCount > 0) {
-      const sample = Object.keys(window.OWNERSHIP_TX_DETAILS)[0];
-      console.log('Sample:', sample, JSON.stringify(window.OWNERSHIP_TX_DETAILS[sample][0]));
-    }
+    // Build transaction detail map - hardcoded from known transactions
+    // since Sleeper offseason weeks return empty arrays
+    window.OWNERSHIP_TX_DETAILS = {
+      'james cook':         [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
+      'bucky irving':       [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 30, 2026'}],
+      'marvin harrison jr': [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
+      'jadarian price':     [{abbr:'LAH', how:'Acquired via trade (Lah Kynasty x killaCam)', date:'Apr 23, 2026'}],
+      'christian mccaffrey':[{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
+      'derrick henry':      [{abbr:'SHL', how:'Acquired via trade (Sandy Hook x Ottomarion)', date:'Apr 22, 2026'}],
+      'jaxon smith-njigba': [{abbr:'SHL', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+      'lamar jackson':      [{abbr:'MISO', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
+      'bijan robinson':     [{abbr:'AMON', how:'Acquired via trade (MisoSawC x Amon Drugs)', date:'Apr 29, 2026'}],
+      'ceedee lamb':        [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+      'cam skattebo':       [{abbr:'KC', how:'Acquired via trade (The Foursome)', date:'Apr 30, 2026'}],
+      'kyle pitts':         [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+      'tre harris':         [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+      'oscar delp':         [{abbr:'OTTO', how:'Added to roster', date:'Jun 2026'}],
+      'stefon diggs':       [{abbr:'KC', how:'Added to roster', date:'Jun 2026'}],
+      'george kittle':      [{abbr:'LAH', how:'Added to roster', date:'Jun 2026'}],
+      'josh downs':         [{abbr:'MISO', how:'Acquired off waivers for $2', date:'May 1, 2026'}],
+      'travis hunter':      [{abbr:'MISO', how:'Added to roster', date:'Jun 2026'}],
+    };
+    console.log('TX Details built for ' + Object.keys(window.OWNERSHIP_TX_DETAILS).length + ' players');
 
   } catch(e) {
     console.log('loadOwnershipHistory error:', e.message, e.stack);
