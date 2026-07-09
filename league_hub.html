@@ -302,6 +302,21 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .profile-sig{font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.5;}
 .profile-sig-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:3px;}
 
+
+/* ===== OWNERSHIP DETAIL PANEL ===== */
+.ownership-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:450;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.ownership-overlay.open{opacity:1;pointer-events:all;}
+.ownership-panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;border-top:2px solid var(--gold-dim);padding:20px 20px 40px;z-index:451;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);max-width:480px;margin:0 auto;}
+.ownership-overlay.open .ownership-panel{transform:translateY(0);}
+.ownership-drag{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.ownership-close{position:absolute;top:12px;right:16px;font-size:22px;color:var(--text-dim);cursor:pointer;background:none;border:none;padding:4px 8px;}
+.ownership-player{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold);letter-spacing:0.04em;line-height:1;}
+.ownership-team{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;margin-bottom:16px;}
+.ownership-row{background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.ownership-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:4px;}
+.ownership-value{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;}
+.ownership-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);margin-top:4px;}
+.ownership-how{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-weight:700;}
 </style>
 <style>
 .bdg{display:inline-block;padding:3px 8px;border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.08em;position:relative;cursor:default;border-left:2px solid;}
@@ -1232,14 +1247,21 @@ loadOwnershipHistory = async function() {
 
       let typeLabel = '';
       if (tx.type === 'trade') {
-        const teams = (tx.roster_ids||[]).map(rid => TEAM_ABBR[ROSTER_MAP[rid]]).filter(Boolean);
-        typeLabel = 'Trade between ' + teams.join(' & ');
+        const teams = (tx.roster_ids||[]).map(rid => {
+          const tid = ROSTER_MAP[rid];
+          const names = {sandy:'Sandy Hook',lah:'Lah Kynasty',miso:'MisoSawC',amon:'Amon Drugs',killacam:'killaCam',nflzey:'NFL Zey',otto:'Ottomarion',abab:'Ababineaux'};
+          return names[tid] || tid;
+        }).filter(Boolean);
+        typeLabel = 'Acquired via trade (' + teams.join(' x ') + ')';
       } else if (tx.type === 'waiver') {
-        typeLabel = 'Waiver claim';
+        const bid = tx.metadata && tx.metadata.waiver_bid_amount != null ? tx.metadata.waiver_bid_amount : null;
+        typeLabel = bid !== null ? 'Acquired off waivers for $' + bid : 'Acquired off waivers';
       } else if (tx.type === 'free_agent') {
-        typeLabel = 'Free agent pickup';
+        typeLabel = 'Added to roster';
+      } else if (tx.type === 'commissioner') {
+        typeLabel = 'Commissioner add';
       } else {
-        typeLabel = 'Added';
+        typeLabel = 'Added to roster';
       }
 
       Object.keys(tx.adds).forEach(pid => {
@@ -1248,46 +1270,65 @@ loadOwnershipHistory = async function() {
         const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
         const key = normalize(fullName);
         if (!window.OWNERSHIP_TX_DETAILS[key]) window.OWNERSHIP_TX_DETAILS[key] = [];
-        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, type: typeLabel, date: date});
+        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, how: typeLabel, date: date});
       });
     });
   } catch(e) {}
 };
 
-function showOwnershipDetail(playerName, teamAbbr) {
-  // Find the popup or create it
-  let popup = document.getElementById('ownershipPopup');
-  if (!popup) {
-    popup = document.createElement('div');
-    popup.id = 'ownershipPopup';
-    popup.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--gold-dim);border-radius:10px;padding:12px 16px;z-index:400;min-width:240px;max-width:320px;box-shadow:0 4px 24px rgba(0,0,0,0.6)';
-    popup.onclick = function() { this.style.display='none'; };
-    document.body.appendChild(popup);
-  }
-
+function showOwnershipDetail(playerName, nflTeam, ownershipHistory) {
   function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
   const key = normalize(playerName);
-  const details = (window.OWNERSHIP_TX_DETAILS[key] || []).filter(d => d.abbr === teamAbbr);
+  const allDetails = window.OWNERSHIP_TX_DETAILS[key] || [];
 
   const teamFullNames = {SHL:'Sandy Hook',LAH:'Lah Kynasty',MISO:'MisoSawC',AMON:'Amon Drugs',KC:'killaCam',ZEY:'NFL Zey',OTTO:'Ottomarion',AB:'Ababineaux'};
 
-  let html = '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:6px">' + playerName.toUpperCase() + ' · ' + teamAbbr + '</div>';
+  // Find current team's acquisition (most recent transaction for current team)
+  const currentTeamEl = document.querySelector('.team-btn.active');
+  const currentTid = currentTeamEl ? currentTeamEl.dataset.id : null;
+  const currentAbbr = currentTid ? (window.TEAM_ABBR || {sandy:'SHL',lah:'LAH',miso:'MISO',amon:'AMON',killacam:'KC',nflzey:'ZEY',otto:'OTTO',abab:'AB'})[currentTid] : null;
 
-  if (details.length > 0) {
-    details.forEach(d => {
-      html += '<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:6px">' +
-        '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px">' + (teamFullNames[teamAbbr]||teamAbbr) + '</div>' +
-        '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text)">' + d.type + '</div>' +
-        '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim);margin-top:2px">' + d.date + '</div>' +
-        '</div>';
-    });
+  // Get the most recent acquisition for current team
+  const currentAcq = allDetails.filter(d => d.abbr === currentAbbr)[0];
+
+  // Build previous owners list (all except current)
+  const prevOwners = (ownershipHistory || []).filter(ab => ab !== currentAbbr);
+
+  // Populate panel
+  document.getElementById('ownershipPlayerName').textContent = playerName + ' | ' + nflTeam;
+  document.getElementById('ownershipPlayerTeam').textContent = '';
+
+  // Acquisition first
+  const acqEl = document.getElementById('ownershipAcquisition');
+  if (currentAcq) {
+    acqEl.innerHTML =
+      '<div class="ownership-how">' + currentAcq.how + '</div>' +
+      '<div class="ownership-date">' + currentAcq.date + '</div>';
   } else {
-    html += '<div style="font-size:11px;color:var(--text-muted);font-style:italic">Transaction details loading...</div>';
+    acqEl.innerHTML =
+      '<div class="ownership-how" style="color:var(--text-dim)">Transaction details loading...</div>';
   }
 
-  html += '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--border);text-align:center;margin-top:6px">TAP TO DISMISS</div>';
-  popup.innerHTML = html;
-  popup.style.display = 'block';
+  // Previous owners below
+  const prevEl = document.getElementById('ownershipPrevOwners');
+  if (prevOwners.length > 0) {
+    prevEl.innerHTML = '<div class="ownership-row">' +
+      '<div class="ownership-label">PREVIOUSLY OWNED BY</div>' +
+      '<div class="ownership-value">' + prevOwners.map(ab => teamFullNames[ab]||ab).join(', ') + '</div>' +
+      '</div>';
+  } else {
+    prevEl.innerHTML = '';
+  }
+
+  document.getElementById('ownershipOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOwnershipPanel(e) {
+  if (e && e.target !== document.getElementById('ownershipOverlay') && e.type !== 'click') return;
+  if (e && e.target && e.target.closest && e.target.closest('.ownership-panel') && e.target !== document.getElementById('ownershipOverlay')) return;
+  document.getElementById('ownershipOverlay').classList.remove('open');
+  document.body.style.overflow = '';
 }
 // ==================== END OWNERSHIP TAG POPUP ====================
 
@@ -1588,6 +1629,18 @@ async function buildScoreboard() {
     <div class="profile-style" id="profileStyle"></div>
 
     <div style="margin-top:12px" id="profileBadges"></div>
+  </div>
+</div>
+
+<!-- OWNERSHIP DETAIL PANEL -->
+<div class="ownership-overlay" id="ownershipOverlay" onclick="closeOwnershipPanel(event)">
+  <div class="ownership-panel" id="ownershipPanel">
+    <div class="ownership-drag"></div>
+    <button class="ownership-close" onclick="closeOwnershipPanel()">✕</button>
+    <div class="ownership-player" id="ownershipPlayerName"></div>
+    <div class="ownership-team" id="ownershipPlayerTeam"></div>
+    <div class="ownership-row" id="ownershipAcquisition"></div>
+    <div id="ownershipPrevOwners"></div>
   </div>
 </div>
 </body>
