@@ -1162,6 +1162,35 @@ async function loadOwnershipHistory() {
     if (activeBtn) selectTeam(activeBtn.dataset.id);
     computeRosterIdentityBadges();
 
+    // Build transaction detail map for clickable tags using same data
+    window.OWNERSHIP_TX_DETAILS = {};
+    const teamFullNamesLocal = {sandy:'Sandy Hook',lah:'Lah Kynasty',miso:'MisoSawC',amon:'Amon Drugs',killacam:'killaCam',nflzey:'NFL Zey',otto:'Ottomarion',abab:'Ababineaux'};
+    allTx.sort((a,b) => b.status_updated - a.status_updated).forEach(tx => {
+      if (!tx.adds) return;
+      const date = new Date(tx.status_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      let typeLabel = '';
+      if (tx.type === 'trade') {
+        const teams = (tx.roster_ids||[]).map(rid => teamFullNamesLocal[ROSTER_MAP[rid]]).filter(Boolean);
+        typeLabel = 'Acquired via trade (' + teams.join(' x ') + ')';
+      } else if (tx.type === 'waiver') {
+        const bid = tx.metadata && tx.metadata.waiver_bid_amount != null ? tx.metadata.waiver_bid_amount : null;
+        typeLabel = bid !== null ? 'Acquired off waivers for $' + bid : 'Acquired off waivers';
+      } else if (tx.type === 'free_agent') {
+        typeLabel = 'Added to roster';
+      } else {
+        typeLabel = 'Added to roster';
+      }
+      Object.keys(tx.adds).forEach(pid => {
+        const p = playersDb[pid];
+        if (!p) return;
+        const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
+        const key = normalize(fullName);
+        const toAbbr = TEAM_ABBR[ROSTER_MAP[tx.adds[pid]]] || '?';
+        if (!window.OWNERSHIP_TX_DETAILS[key]) window.OWNERSHIP_TX_DETAILS[key] = [];
+        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, how: typeLabel, date: date});
+      });
+    });
+
   } catch(e) {}
 }
 
@@ -1221,67 +1250,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== END SLEEPER API ====================
 
 // ==================== OWNERSHIP TAG POPUP ====================
-// Store transaction details per player during ownership history load
 window.OWNERSHIP_TX_DETAILS = {};
-
-// Override loadOwnershipHistory to also store transaction details
-const _origLoadOwnership = loadOwnershipHistory;
-loadOwnershipHistory = async function() {
-  // Run original first
-  await _origLoadOwnership();
-
-  // Now build detailed transaction map: playerName -> [{abbr, type, date, fromTeam}]
-  try {
-    const [currentTx, previousTx] = await Promise.all([
-      fetchAllTransactions(LEAGUE_ID),
-      fetchAllTransactions(PREVIOUS_LEAGUE_ID)
-    ]);
-    const allTx = currentTx.concat(previousTx)
-      .filter(tx => tx && tx.status === 'complete')
-      .sort((a,b) => b.status_updated - a.status_updated);
-
-    const playersDb = await getPlayersDb();
-    if (!playersDb) return;
-
-    function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
-
-    allTx.forEach(tx => {
-      if (!tx.adds) return;
-      const date = new Date(tx.status_updated).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      const toRid = Object.values(tx.adds)[0];
-      const toTid = ROSTER_MAP[toRid];
-      const toAbbr = TEAM_ABBR[toTid] || '?';
-
-      let typeLabel = '';
-      if (tx.type === 'trade') {
-        const teams = (tx.roster_ids||[]).map(rid => {
-          const tid = ROSTER_MAP[rid];
-          const names = {sandy:'Sandy Hook',lah:'Lah Kynasty',miso:'MisoSawC',amon:'Amon Drugs',killacam:'killaCam',nflzey:'NFL Zey',otto:'Ottomarion',abab:'Ababineaux'};
-          return names[tid] || tid;
-        }).filter(Boolean);
-        typeLabel = 'Acquired via trade (' + teams.join(' x ') + ')';
-      } else if (tx.type === 'waiver') {
-        const bid = tx.metadata && tx.metadata.waiver_bid_amount != null ? tx.metadata.waiver_bid_amount : null;
-        typeLabel = bid !== null ? 'Acquired off waivers for $' + bid : 'Acquired off waivers';
-      } else if (tx.type === 'free_agent') {
-        typeLabel = 'Added to roster';
-      } else if (tx.type === 'commissioner') {
-        typeLabel = 'Commissioner add';
-      } else {
-        typeLabel = 'Added to roster';
-      }
-
-      Object.keys(tx.adds).forEach(pid => {
-        const p = playersDb[pid];
-        if (!p) return;
-        const fullName = p.full_name || ((p.first_name||'')+' '+(p.last_name||''));
-        const key = normalize(fullName);
-        if (!window.OWNERSHIP_TX_DETAILS[key]) window.OWNERSHIP_TX_DETAILS[key] = [];
-        window.OWNERSHIP_TX_DETAILS[key].push({abbr: toAbbr, how: typeLabel, date: date});
-      });
-    });
-  } catch(e) {}
-};
 
 function showOwnershipDetail(playerName, nflTeam, tappedAbbr) {
   // Read ownership history from the clicked element's data attribute
