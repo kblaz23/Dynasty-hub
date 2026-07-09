@@ -855,7 +855,7 @@ function buildRoster(){
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
         <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
-        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?p.ownershipHistory.map(ab=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+ab+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span>':''}
+        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?p.ownershipHistory.map(ab=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\','+JSON.stringify(p.ownershipHistory||[])+',\''+ab+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span>':''}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
@@ -1276,23 +1276,23 @@ loadOwnershipHistory = async function() {
   } catch(e) {}
 };
 
-function showOwnershipDetail(playerName, nflTeam, ownershipHistory) {
+function showOwnershipDetail(playerName, nflTeam, ownershipHistory, tappedAbbr) {
   function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
   const key = normalize(playerName);
   const allDetails = window.OWNERSHIP_TX_DETAILS[key] || [];
 
   const teamFullNames = {SHL:'Sandy Hook',LAH:'Lah Kynasty',MISO:'MisoSawC',AMON:'Amon Drugs',KC:'killaCam',ZEY:'NFL Zey',OTTO:'Ottomarion',AB:'Ababineaux'};
 
-  // Find current team's acquisition (most recent transaction for current team)
+  // Find current team's acquisition using tapped abbreviation
   const currentTeamEl = document.querySelector('.team-btn.active');
   const currentTid = currentTeamEl ? currentTeamEl.dataset.id : null;
-  const currentAbbr = currentTid ? (window.TEAM_ABBR || {sandy:'SHL',lah:'LAH',miso:'MISO',amon:'AMON',killacam:'KC',nflzey:'ZEY',otto:'OTTO',abab:'AB'})[currentTid] : null;
+  const currentAbbr = currentTid ? (TEAM_ABBR||{sandy:'SHL',lah:'LAH',miso:'MISO',amon:'AMON',killacam:'KC',nflzey:'ZEY',otto:'OTTO',abab:'AB'})[currentTid] : null;
 
   // Get the most recent acquisition for current team
   const currentAcq = allDetails.filter(d => d.abbr === currentAbbr)[0];
 
-  // Build previous owners list (all except current)
-  const prevOwners = (ownershipHistory || []).filter(ab => ab !== currentAbbr);
+  // Previous owners = all tags except the one currently tapped (which is a past team)
+  const prevOwners = (ownershipHistory || []);
 
   // Populate panel
   document.getElementById('ownershipPlayerName').textContent = playerName + ' | ' + nflTeam;
