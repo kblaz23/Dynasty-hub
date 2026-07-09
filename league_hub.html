@@ -855,7 +855,16 @@ function buildRoster(){
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
         <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
-        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span class="own-tags-wrap">'+p.ownershipHistory.map((ab,i)=>'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+ab+'\',\''+( p.ownershipTx?p.ownershipTx.how:'')+'\',\''+( p.ownershipTx?p.ownershipTx.date:'')+'\')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;" title="Tap for details">'+ab+'</span>').join('')+'<span style="margin-right:10px;"></span></span>':''}
+        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?(function(){
+          var txKey=p.name.toLowerCase().replace(/[^a-z]/g,'');
+          var txArr=window.OWNERSHIP_TX_DETAILS&&window.OWNERSHIP_TX_DETAILS[txKey];
+          var tx=txArr?txArr[0]:null;
+          var how=tx?tx.how:'';
+          var date=tx?tx.date:'';
+          return '<span class="own-tags-wrap">'+p.ownershipHistory.map(function(ab){
+            return '<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+ab+'\',\''+how+'\',\''+date+'\''+')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;">'+ab+'</span>';
+          }).join('')+'<span style="margin-right:10px;"></span></span>';
+        })():''}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
