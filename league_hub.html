@@ -855,16 +855,7 @@ function buildRoster(){
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
         <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
-        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?(function(){
-          var txKey=p.name.toLowerCase().replace(/[^a-z]/g,'');
-          var txArr=window.OWNERSHIP_TX_DETAILS&&window.OWNERSHIP_TX_DETAILS[txKey];
-          var tx=txArr?txArr[0]:null;
-          var how=tx?tx.how:'';
-          var date=tx?tx.date:'';
-          return '<span class="own-tags-wrap">'+p.ownershipHistory.map(function(ab){
-            return '<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+ab+'\',\''+how+'\',\''+date+'\''+')" style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;margin-right:3px;vertical-align:middle;cursor:pointer;">'+ab+'</span>';
-          }).join('')+'<span style="margin-right:10px;"></span></span>';
-        })():''}
+        ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+p.ownershipHistory.join(',')+'\',\''+(p.ownershipTx?p.ownershipTx.how.replace(/\'/g,''):'')+'\''+',\''+(p.ownershipTx?p.ownershipTx.date:'')+'\')" style="cursor:pointer;display:inline-flex;gap:3px;vertical-align:middle;margin-right:10px;">'+p.ownershipHistory.map(ab=>'<span style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;">'+ab+'</span>').join('')+'</span>':''}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
@@ -1162,10 +1153,9 @@ async function loadOwnershipHistory() {
             const pastTeams = teamAbbrs.filter(ab => ab !== currentAbbr);
             if (pastTeams.length > 0) {
               rosterPlayer.ownershipHistory = pastTeams;
-              // Attach transaction detail directly to player
               const txKey = normalize(rosterPlayer.name);
               const txData = window.OWNERSHIP_TX_DETAILS[txKey];
-              if (txData) rosterPlayer.ownershipTx = txData[0];
+              if (txData) rosterPlayer.ownershipTx = txData;
             }
           }
         });
@@ -1173,9 +1163,11 @@ async function loadOwnershipHistory() {
     });
 
     OWNERSHIP_LOADED = true;
+    computeRosterIdentityBadges();
+
+    // Re-render active roster now that ownershipTx is attached to all players
     const activeBtn = document.querySelector('.team-btn.active');
     if (activeBtn) selectTeam(activeBtn.dataset.id);
-    computeRosterIdentityBadges();
 
     // Build transaction detail map - hardcoded known transactions
     // (initialized at page load above, no need to rebuild here)
@@ -1264,30 +1256,38 @@ window.OWNERSHIP_TX_DETAILS = {
   'rachaadwhite': {abbr:'OTTO', how:'Added to roster', date:'Jun 2026'},
 };
 
-function showOwnershipDetail(playerName, nflTeam, tappedAbbr, txHow, txDate) {
+// ==================== ATTACH OWNERSHIP TX (runs immediately, no async) ====================
+function attachOwnershipTx() {
+  function normalize(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+  TEAMS.forEach(function(team) {
+    if (!team.roster) return;
+    team.roster.forEach(function(player) {
+      var key = normalize(player.name);
+      var tx = window.OWNERSHIP_TX_DETAILS[key];
+      if (tx) player.ownershipTx = tx;
+    });
+  });
+}
+attachOwnershipTx();
+// ==================== END ATTACH OWNERSHIP TX ====================
+
+
+function showOwnershipDetail(playerName, nflTeam, tappedAbbrs, txHow, txDate) {
   const teamFullNames = {SHL:'Sandy Hook',LAH:'Lah Kynasty',MISO:'MisoSawC',AMON:'Amon Drugs',KC:'killaCam',ZEY:'NFL Zey',OTTO:'Ottomarion',AB:'Ababineaux'};
+  const prevOwners = tappedAbbrs ? tappedAbbrs.split(',').map(ab => teamFullNames[ab]||ab).join(', ') : '';
 
   document.getElementById('ownershipPlayerName').textContent = playerName + ' | ' + nflTeam;
   document.getElementById('ownershipPlayerTeam').textContent = '';
 
   const acqEl = document.getElementById('ownershipAcquisition');
-  if (txHow) {
-    acqEl.innerHTML =
-      '<div class="ownership-how">' + txHow + '</div>' +
-      (txDate ? '<div class="ownership-date">' + txDate + '</div>' : '');
-  } else {
-    acqEl.innerHTML = '<div class="ownership-how" style="color:var(--text-dim)">No transaction data available</div>';
-  }
+  acqEl.innerHTML = txHow
+    ? '<div class="ownership-how">' + txHow + '</div><div class="ownership-date">' + txDate + '</div>'
+    : '<div class="ownership-how" style="color:var(--text-dim)">No transaction data available</div>';
 
   const prevEl = document.getElementById('ownershipPrevOwners');
-  if (tappedAbbr) {
-    prevEl.innerHTML = '<div class="ownership-row">' +
-      '<div class="ownership-label">PREVIOUSLY OWNED BY</div>' +
-      '<div class="ownership-value">' + (teamFullNames[tappedAbbr]||tappedAbbr) + '</div>' +
-      '</div>';
-  } else {
-    prevEl.innerHTML = '';
-  }
+  prevEl.innerHTML = prevOwners
+    ? '<div class="ownership-row"><div class="ownership-label">PREVIOUSLY OWNED BY</div><div class="ownership-value">' + prevOwners + '</div></div>'
+    : '';
 
   document.getElementById('ownershipOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
