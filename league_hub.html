@@ -604,6 +604,34 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 </div><!-- /main -->
 
 <script>
+// ==================== NFL SCHEDULE ====================
+const NFL_TEAM_NAMES = {
+  ARI:'Cardinals',ATL:'Falcons',BAL:'Ravens',BUF:'Bills',CAR:'Panthers',
+  CHI:'Bears',CIN:'Bengals',CLE:'Browns',DAL:'Cowboys',DEN:'Broncos',
+  DET:'Lions',GB:'Packers',HOU:'Texans',IND:'Colts',JAX:'Jaguars',
+  KC:'Chiefs',LAC:'Chargers',LAR:'Rams',LV:'Raiders',MIA:'Dolphins',
+  MIN:'Vikings',NE:'Patriots',NO:'Saints',NYG:'Giants',NYJ:'Jets',
+  PHI:'Eagles',PIT:'Steelers',SEA:'Seahawks',SF:'49ers',TB:'Buccaneers',
+  TEN:'Titans',WAS:'Commanders'
+};
+let NFL_SCHEDULE = {};
+async function loadNFLSchedule(week) {
+  try {
+    const games = await sleeperFetch('/schedule/nfl/regular/2026/' + week);
+    if (!games || !Array.isArray(games)) return;
+    games.forEach(g => {
+      if (g.home_team) NFL_SCHEDULE[g.home_team] = {opp: g.away_team, home: true};
+      if (g.away_team) NFL_SCHEDULE[g.away_team] = {opp: g.home_team, home: false};
+    });
+  } catch(e) {}
+}
+function getMatchupStr(nflTeam) {
+  const m = NFL_SCHEDULE[nflTeam];
+  if (!m || !m.opp) return '';
+  return (m.home ? 'vs ' : 'at ') + (NFL_TEAM_NAMES[m.opp] || m.opp);
+}
+// ==================== END NFL SCHEDULE ====================
+
 // ==================== BADGES (load first) ====================
 var BDEFS = {
   DYNASTY:    ['bdg-gold',   'DYNASTY',       'Won a league championship'],
@@ -796,7 +824,7 @@ function buildHome(){
         </div>
       </div>`;
     } else {
-      cw.innerHTML = `<div class="countdown-wrap"><div class="countdown-label"><span class="countdown-live"></span>SEASON IN PROGRESS</div></div>`;
+      cw.innerHTML = `<div class="countdown-wrap"><div class="countdown-label" style="display:flex;align-items:center;justify-content:center;gap:6px"><span class="countdown-live" style="margin-right:0"></span>SEASON III IN PROGRESS</div></div>`;
     }
   }
   updateCountdown();
@@ -838,7 +866,7 @@ function buildRoster(){
   const t=TEAMS.find(x=>x.id===activeTeam);if(!t)return;
   const posClass={QB:'tg-qb',RB:'tg-rb',WR:'tg-wr',TE:'tg-te',K:'tg-k',WRT:'tg-fx'};
   const ageColor=a=>a<=23?'var(--accent)':a<=27?'var(--text)':a<=30?'var(--gold)':'var(--red)';
-  const sections=[{label:'STARTERS',type:'starter'},{label:'BENCH',type:'bench'},{label:'TAXI SQUAD',type:'taxi'}];
+  const sections=[{label:'STARTERS',type:'starter'},{label:'BENCH',type:'bench'},{label:'TAXI SQUAD',type:'taxi'},{label:'INJURED RESERVE',type:'ir'}];
   let html=`
     <div class="roster-hd" style="position:relative;">
       <button onclick="openProfile('${t.id}')" style="position:absolute;top:4px;right:4px;background:none;border:none;cursor:pointer;padding:4px;" title="Manager Profile"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#c8a800" stroke="#c8a800" stroke-width="1" stroke-linejoin="round"/></svg></button>
@@ -891,13 +919,19 @@ function buildRoster(){
     html+=`<div class="pos-hd">${s.label}</div>`;
     players.forEach(p=>{
       const pc=posClass[p.slot]||'';
-      const isRookie=ROOKIES_2026.has(p.name);
+      const isRookie = ROOKIES_2026.has(p.name) || (p.sleeperId && playersDb && playersDb[p.sleeperId] && playersDb[p.sleeperId].years_exp === 0) || (p.years_exp === 0);
+      // For bench/taxi without pos, infer from slot
+      if (!p.pos && (p.type==='bench'||p.type==='taxi'||p.type==='ir')) {
+        // Try to detect QB/RB/WR/TE/K from hardcoded slot
+        p.pos = p.slot !== 'BN' && p.slot !== 'TX' && p.slot !== 'IR' ? p.slot : '';
+      }
       const pc2=posClass[p.pos||p.slot]||'';
       html+=`<div class="plr-row">
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
-        <span class="plr-nm">${p.name}${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-left:4px;vertical-align:middle;">R</span>':''}<span class="plr-nfl">${p.nfl}</span></span>
+        <span class="plr-nm">${p.name}<span class="plr-nfl">${p.nfl}</span>${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-right:4px;vertical-align:middle;">R</span>':''}${(()=>{const sched=NFL_SCHEDULE[p.nfl];if(!sched||!sched.opp)return '';const prefix=sched.home?'vs':'at';return '<span style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-dim);margin-left:2px;vertical-align:middle">'+prefix+' <img src=\'https://sleepercdn.com/images/team_logos/nfl/'+sched.opp.toLowerCase()+'.jpg\' style=\'width:13px;height:13px;border-radius:2px;vertical-align:middle;margin-left:2px\' onerror=\'this.style.display=\"none\"\'/></span>';})()}</span>
         ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+p.ownershipHistory.join(',')+'\',\''+(p.ownershipTx?p.ownershipTx.how.replace(/\'/g,''):'')+'\''+',\''+(p.ownershipTx?p.ownershipTx.date:'')+'\')" style="cursor:pointer;display:inline-flex;gap:3px;vertical-align:middle;margin-right:10px;">'+p.ownershipHistory.map(ab=>'<span style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;">'+ab+'</span>').join('')+'</span>':''}
+        ${(()=>{const s=p.injuryStatus||'';if(!s)return '';const cfg={'Out':['#ff4455','rgba(255,68,85,0.15)','OUT'],'Doubtful':['#ff8c42','rgba(255,140,66,0.15)','DOUBT'],'Questionable':['#f5c518','rgba(245,197,24,0.12)','QUES'],'IR':['#ff4455','rgba(255,68,85,0.15)','IR']};const col=cfg[s]||['#aaa','rgba(255,255,255,0.08)',s.toUpperCase()];return '<span style="font-family:DM Mono,monospace;font-size:8px;font-weight:700;color:'+col[0]+';background:'+col[1]+';border:1px solid '+col[0]+'44;border-radius:3px;padding:0px 5px;margin-right:4px;vertical-align:middle">'+col[2]+'</span>';})()}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
         ${p.value>0?'<span class="plr-val">'+p.value+'</span>':''}
       </div>`;
@@ -1066,6 +1100,7 @@ function updateRostersFromSleeper(rosters, users) {
     if (!team) return;
     if (r.settings) {
       team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+      if (r.settings.streak !== undefined) team.sleeperStreak = r.settings.streak;
     }
     team.sleeperPlayers = r.players || [];
     team.sleeperStarters = r.starters || [];
@@ -1087,7 +1122,10 @@ async function loadLiveRosters() {
       const team = TEAMS.find(t => t.id === teamId);
       if (!team) return;
 
-      if (r.settings) team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+      if (r.settings) {
+        team.sleeperRecord = r.settings.wins + '-' + r.settings.losses;
+        if (r.settings.streak !== undefined) team.sleeperStreak = r.settings.streak;
+      }
 
       const taxiSet = new Set(r.taxi || []);
       const starterIds = (r.starters || []).filter(id => id && id !== '0');
@@ -1100,7 +1138,7 @@ async function loadLiveRosters() {
         if (!p) return;
         var pos = p.position || 'BN';
         if (pos === 'PK') pos = 'K';
-        liveRoster.push({slot:slot, name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'starter', pos:pos});
+        liveRoster.push({slot:slot, name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'starter', pos:pos, injuryStatus:p.injury_status||'', years_exp:p.years_exp||0});
       });
 
       taxiSet.forEach(id => {
@@ -1108,17 +1146,26 @@ async function loadLiveRosters() {
         if (!p) return;
         var pos = p.position || 'BN';
         if (pos === 'PK') pos = 'K';
-        liveRoster.push({slot:'TX', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'taxi', pos:pos});
+        liveRoster.push({slot:'TX', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'taxi', pos:pos, injuryStatus:p.injury_status||'', years_exp:p.years_exp||0});
       });
 
+      const reserveSet = new Set(r.reserve || []);
       const starterSet = new Set(starterIds);
       allPlayerIds.forEach(id => {
-        if (starterSet.has(id) || taxiSet.has(id)) return;
+        if (starterSet.has(id) || taxiSet.has(id) || reserveSet.has(id)) return;
         const p = playersDb[id];
         if (!p) return;
         var pos = p.position || 'BN';
         if (pos === 'PK') pos = 'K';
-        liveRoster.push({slot:'BN', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'bench', pos:pos});
+        liveRoster.push({slot:'BN', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'bench', pos:pos, injuryStatus:p.injury_status||'', years_exp:p.years_exp||0});
+      });
+      // IR / Reserve slots
+      reserveSet.forEach(id => {
+        const p = playersDb[id];
+        if (!p) return;
+        var pos = p.position || 'BN';
+        if (pos === 'PK') pos = 'K';
+        liveRoster.push({slot:'IR', name:p.full_name||(p.first_name+' '+p.last_name), nfl:p.team||'FA', age:p.age||0, value:0, type:'ir', pos:pos, injuryStatus:p.injury_status||'', years_exp:p.years_exp||0});
       });
 
       if (liveRoster.length > 0) {
@@ -1270,6 +1317,12 @@ function computeRosterIdentityBadges() {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(async function() {
     await loadSleeperData();
+    // Load NFL schedule for current week so matchups show everywhere
+    try {
+      const nflState = await sleeperFetch('/state/nfl');
+      const currentWeek = nflState ? (nflState.display_week || nflState.week || 1) : 1;
+      await loadNFLSchedule(currentWeek);
+    } catch(e) {}
     await loadLiveRosters();
     await loadOwnershipHistory();
   }, 500);
@@ -1451,6 +1504,7 @@ const PPG_2025 = {
 };
 // ==================== END 2025 PPG DATA ====================
 
+
 // ==================== LIVE SCOREBOARD ====================
 let SCOREBOARD_LOADING = false;
 
@@ -1469,13 +1523,14 @@ async function loadScoreboard(forceRefresh) {
     const seasonType = state ? state.season_type : 'regular';
     const inSeason = seasonType === 'regular' || seasonType === 'post' || (state && state.season_has_scores);
 
+    await loadNFLSchedule(week);
     document.getElementById('scoreWeekLabel').textContent =
       '2026 Season · Week ' + week + (inSeason ? ' · LIVE' : ' · Preseason');
 
     // Fetch matchups + projections in parallel
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/player/' + season + '/' + week + '?season_type=regular'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K'),
       getPlayersDb()
     ]);
 
@@ -1563,7 +1618,8 @@ async function loadScoreboard(forceRefresh) {
             name: p ? (p.full_name || p.first_name + ' ' + p.last_name) : 'Unknown',
             pts: score,
             ls: ls,
-            lsColor: lsColor
+            lsColor: lsColor,
+            rookie: p ? (p.years_exp === 0) : false
           };
         });
     }
@@ -1702,7 +1758,7 @@ async function loadScoreboard(forceRefresh) {
           '<div class="sb-team-side">' +
             '<div style="margin-bottom:4px">' + logo(tidA, 36) + '</div>' +
             '<div class="sb-team-name" style="color:' + (aWinning||!hasScores?'var(--gold)':'var(--text-dim)') + '">' + teamNames[tidA] + '</div>' +
-            '<div class="sb-team-abbr">' + teamAbbrs[tidA] + ' · PWR #' + pwrRanks[tidA] + ' · ' + (tA?tA.ovr:'?') + ' OVR</div>' +
+            '<div class="sb-team-abbr">' + teamAbbrs[tidA] + ' · PWR #' + pwrRanks[tidA] + ' · ' + (tA?tA.ovr:'?') + ' OVR</div>' +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:1px">' + (tA&&tA.sleeperRecord ? tA.sleeperRecord : '0-0') + (function(){if(!tA||tA.sleeperStreak===undefined)return '';const s=tA.sleeperStreak;if(s===0)return '';const isW=s>0;return ' <span style="font-size:9px;font-weight:700;color:'+(isW?'#4caf72':'#ff4455')+'">'+( isW?'W':'L')+Math.abs(s)+'</span>'})() + '</div>' +
           '</div>' +
           '<div class="sb-score-wrap">' +
             '<div style="display:flex;align-items:center;gap:8px;">' +
@@ -1715,7 +1771,7 @@ async function loadScoreboard(forceRefresh) {
           '<div class="sb-team-side right">' +
             '<div style="margin-bottom:4px;display:flex;justify-content:flex-end">' + logo(tidB, 36) + '</div>' +
             '<div class="sb-team-name" style="color:' + (bWinning||!hasScores?'var(--gold)':'var(--text-dim)') + '">' + teamNames[tidB] + '</div>' +
-            '<div class="sb-team-abbr">' + teamAbbrs[tidB] + ' · PWR #' + pwrRanks[tidB] + ' · ' + (tB?tB.ovr:'?') + ' OVR</div>' +
+            '<div class="sb-team-abbr">' + teamAbbrs[tidB] + ' · PWR #' + pwrRanks[tidB] + ' · ' + (tB?tB.ovr:'?') + ' OVR</div>' +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:1px;text-align:right">' + (tB&&tB.sleeperRecord ? tB.sleeperRecord : '0-0') + (function(){if(!tB||tB.sleeperStreak===undefined)return '';const s=tB.sleeperStreak;if(s===0)return '';const isW=s>0;return ' <span style="font-size:9px;font-weight:700;color:'+(isW?'#4caf72':'#ff4455')+'">'+( isW?'W':'L')+Math.abs(s)+'</span>'})() + '</div>' +
           '</div>' +
         '</div>' +
 
@@ -1739,14 +1795,14 @@ async function loadScoreboard(forceRefresh) {
               rows += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">' +
                 '<div style="flex:1">' +
                   (pA ? '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
-                    '<div class="sb-player-name">' + pA.name + '</div>' +
+                    '<div class="sb-player-name">' + pA.name + (pA.rookie?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0 3px;margin-left:4px">R</span>':'') + '</div>' +
                     '<div class="sb-player-pts" style="margin-left:6px">' + pA.pts.toFixed(1) + '</div>' +
                   '</div>' +
                   '<div style="font-family:DM Mono,monospace;font-size:8px;color:' + pA.lsColor + ';letter-spacing:0.06em">' + pA.ls + '</div>' : '') +
                 '</div>' +
                 '<div style="flex:1;text-align:right">' +
                   (pB ? '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-direction:row-reverse">' +
-                    '<div class="sb-player-name">' + pB.name + '</div>' +
+                    '<div class="sb-player-name">' + pB.name + (pB.rookie?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0 3px;margin-left:4px">R</span>':'') + '</div>' +
                     '<div class="sb-player-pts" style="margin-right:6px">' + pB.pts.toFixed(1) + '</div>' +
                   '</div>' +
                   '<div style="font-family:DM Mono,monospace;font-size:8px;color:' + pB.lsColor + ';letter-spacing:0.06em;text-align:right">' + pB.ls + '</div>' : '') +
@@ -1757,38 +1813,66 @@ async function loadScoreboard(forceRefresh) {
           })() +
         '</div>' : '') +
 
-        // Top 3 projected
+        // Top 3 projected - side by side ESPN style
         (top3A.length || top3B.length ?
         '<div class="sb-section">' +
-          '<div class="sb-section-title">TOP PROJECTED PLAYERS</div>' +
-          '<div class="sb-two-col">' +
-            '<div>' + top3A.map(p => '<div class="sb-player-row"><span class="sb-player-name" style="font-size:10px">' + p.name + '</span><span class="sb-player-proj">' + (p.actual > 0 ? p.actual.toFixed(1) + ' / ' : '') + p.pts.toFixed(1) + ' proj</span></div>').join('') + '</div>' +
-            '<div style="text-align:right">' + top3B.map(p => '<div class="sb-player-row" style="justify-content:flex-end;gap:6px"><span class="sb-player-proj">' + (p.actual > 0 ? p.actual.toFixed(1) + ' / ' : '') + p.pts.toFixed(1) + ' proj</span><span class="sb-player-name" style="font-size:10px">' + p.name + '</span></div>').join('') + '</div>' +
-          '</div>' +
+          '<div class="sb-section-title" style="text-align:center">TOP PROJECTED</div>' +
+          (function() {
+            const maxRows = Math.max(top3A.length, top3B.length);
+            let rows = '';
+            for (let i = 0; i < maxRows; i++) {
+              const pA = top3A[i];
+              const pB = top3B[i];
+              rows += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px">' +
+                '<div style="flex:1">' +
+                  (pA ? '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+                    '<div class="sb-player-name">' + pA.name + (pA.rookie?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0 3px;margin-left:4px">R</span>':'') + '</div>' +
+                    '<div class="sb-player-pts" style="margin-left:6px;font-size:10px;color:var(--text-dim)">' + (pA.actual>0 ? pA.actual.toFixed(1)+' / ' : '') + pA.pts.toFixed(1) + '</div>' +
+                  '</div>' : '') +
+                '</div>' +
+                '<div style="flex:1;text-align:right">' +
+                  (pB ? '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-direction:row-reverse">' +
+                    '<div class="sb-player-name">' + pB.name + (pB.rookie?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0 3px;margin-left:4px">R</span>':'') + '</div>' +
+                    '<div class="sb-player-pts" style="margin-right:6px;font-size:10px;color:var(--text-dim)">' + (pB.actual>0 ? pB.actual.toFixed(1)+' / ' : '') + pB.pts.toFixed(1) + '</div>' +
+                  '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }
+            return rows;
+          })() +
         '</div>' : '') +
 
-        // Tale of the Tape
-        '<div class="sb-tape">' +
-          '<div class="sb-tape-title">⚔️ TALE OF THE TAPE</div>' +
-          '<div class="sb-tape-row">' +
-            '<div class="sb-tape-val left' + (parseFloat(currentPPG[tidA]||PPG_2025[tidA]) > parseFloat(currentPPG[tidB]||PPG_2025[tidB]) ? ' win' : '') + '">' +
-              (currentPPG[tidA] ? currentPPG[tidA] + ' PPG' : PPG_2025[tidA] + ' PPG') +
-              '<div style="font-size:8px;color:var(--text-muted)">' + PPG_2025[tidA] + " in '25</div>" +
+        // Tale of the Tape - compact 3-col grid
+        (function() {
+          function tc(vA, label, vB, aWins) {
+            const bWins = !aWins && String(vA) !== String(vB);
+            return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
+              '<div style="font-size:8px;color:var(--text-dim);text-align:center;letter-spacing:0.04em;white-space:nowrap">' + label + '</div>' +
+              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
+          }
+          const ppgA = parseFloat(currentPPG[tidA]||PPG_2025[tidA]);
+          const ppgB = parseFloat(currentPPG[tidB]||PPG_2025[tidB]);
+          const ppgLabelA = (currentPPG[tidA]?currentPPG[tidA]:PPG_2025[tidA]) + " PPG<br><span style='font-size:8px;color:var(--text-dim)'>" + PPG_2025[tidA] + " in '25</span>";
+          const ppgLabelB = (currentPPG[tidB]?currentPPG[tidB]:PPG_2025[tidB]) + " PPG<br><span style='font-size:8px;color:var(--text-dim)'>" + PPG_2025[tidB] + " in '25</span>";
+          function tcPPG(vA, label, vB, aWins) {
+            const bWins = !aWins && String(vA) !== String(vB);
+            return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
+              '<div style="font-size:8px;color:var(--text-dim);text-align:center;letter-spacing:0.04em;white-space:nowrap">' + label + '</div>' +
+              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
+          }
+          return '<div class="sb-tape">' +
+            '<div class="sb-tape-title">⚔️ TALE OF THE TAPE</div>' +
+            '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px 8px;align-items:center">' +
+              tcPPG(ppgLabelA, 'AVG PPG', ppgLabelB, ppgA > ppgB) +
+              tc('#'+pwrRanks[tidA]+' · '+(tA?tA.ovr:'?')+' OVR', 'PWR · OVR', '#'+pwrRanks[tidB]+' · '+(tB?tB.ovr:'?')+' OVR', pwrRanks[tidA]<pwrRanks[tidB]) +
+              tc(posRanks[tidA]?posRanks[tidA].QB:'?', 'QB Pos. Ranking', posRanks[tidB]?posRanks[tidB].QB:'?', parseInt((posRanks[tidA]?posRanks[tidA].QB:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].QB:'#9').replace('#',''))) +
+              tc(posRanks[tidA]?posRanks[tidA].RB:'?', 'RB Pos. Ranking', posRanks[tidB]?posRanks[tidB].RB:'?', parseInt((posRanks[tidA]?posRanks[tidA].RB:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].RB:'#9').replace('#',''))) +
+              tc(posRanks[tidA]?posRanks[tidA].WR:'?', 'WR Pos. Ranking', posRanks[tidB]?posRanks[tidB].WR:'?', parseInt((posRanks[tidA]?posRanks[tidA].WR:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].WR:'#9').replace('#',''))) +
+              tc(posRanks[tidA]?posRanks[tidA].TE:'?', 'TE Pos. Ranking', posRanks[tidB]?posRanks[tidB].TE:'?', parseInt((posRanks[tidA]?posRanks[tidA].TE:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].TE:'#9').replace('#',''))) +
+              tc(allTimeRec[tidA]||'?', 'ALL-TIME', allTimeRec[tidB]||'?', false) +
             '</div>' +
-            '<div class="sb-tape-cat">AVG PPG</div>' +
-            '<div class="sb-tape-val right' + (parseFloat(currentPPG[tidB]||PPG_2025[tidB]) > parseFloat(currentPPG[tidA]||PPG_2025[tidA]) ? ' win' : '') + '">' +
-              (currentPPG[tidB] ? currentPPG[tidB] + ' PPG' : PPG_2025[tidB] + ' PPG') +
-              '<div style="font-size:8px;color:var(--text-muted)">' + PPG_2025[tidB] + " in '25</div>" +
-            '</div>' +
-          '</div>' +
-          buildTapeRow('PWR RANK', '#' + pwrRanks[tidA], '#' + pwrRanks[tidB], false) +
-          buildTapeRow('OVR', tA?tA.ovr:'?', tB?tB.ovr:'?', true) +
-          buildTapeRow('QB ROOM', posRanks[tidA]?posRanks[tidA].QB:'?', posRanks[tidB]?posRanks[tidB].QB:'?', false) +
-          buildTapeRow('RB ROOM', posRanks[tidA]?posRanks[tidA].RB:'?', posRanks[tidB]?posRanks[tidB].RB:'?', false) +
-          buildTapeRow('WR ROOM', posRanks[tidA]?posRanks[tidA].WR:'?', posRanks[tidB]?posRanks[tidB].WR:'?', false) +
-          buildTapeRow('TE ROOM', posRanks[tidA]?posRanks[tidA].TE:'?', posRanks[tidB]?posRanks[tidB].TE:'?', false) +
-          buildTapeRow('ALL-TIME', allTimeRec[tidA]||'?', allTimeRec[tidB]||'?', true) +
-        '</div>' +
+          '</div>';
+        })() +
 
         // Analysis
         (analysis ?
@@ -1894,7 +1978,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     const season = '2026';
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/player/' + season + '/' + week + '?season_type=regular'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K'),
       getPlayersDb()
     ]);
 
@@ -1989,8 +2073,8 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       '</div>' +
       '<div class="lineup-prob-bar"><div class="lineup-prob-fill" style="width:' + probA + '%"></div></div>' +
       '<div class="lineup-prob-labels" style="margin-top:4px">' +
-        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + (teamNames[tidA]||tidA) + ' · ' + scoreA.toFixed(2) + '</span>' +
-        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + scoreB.toFixed(2) + ' · ' + (teamNames[tidB]||tidB) + '</span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + (teamNames[tidA]||tidA) + ' · ' + scoreA.toFixed(2) + ' · <span style="color:var(--gold)">' + (tA&&tA.sleeperRecord?tA.sleeperRecord:'0-0') + '</span></span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)"><span style="color:var(--gold)">' + (tB&&tB.sleeperRecord?tB.sleeperRecord:'0-0') + '</span> · ' + scoreB.toFixed(2) + ' · ' + (teamNames[tidB]||tidB) + '</span>' +
       '</div>' +
     '</div>';
 
@@ -2033,10 +2117,11 @@ async function openLineup(rosterIdA, rosterIdB, week) {
         // Left player
         '<div>' +
           '<div style="display:flex;align-items:center;gap:3px">' +
-            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameA + '</div>' +
+            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameA + (pA&&pA.years_exp===0?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:2px;padding:0 3px;margin-left:3px">R</span>':'') + '</div>' +
             '<span style="font-size:11px">' + iconA + '</span>' +
+            (pA&&pA.injury_status&&pA.injury_status==='Out'?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.15);border:1px solid #ff445544;border-radius:2px;padding:0 3px">OUT</span>':'') +
           '</div>' +
-          '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + (function(){if(!pA)return '';const s=NFL_SCHEDULE[pA.team];if(!s||!s.opp)return '';return ' ' + (s.home?'vs':'at') + ' <img src="https://sleepercdn.com/images/team_logos/nfl/'+s.opp.toLowerCase()+'.jpg" style="width:12px;height:12px;border-radius:2px;vertical-align:middle;margin-left:2px" onerror="this.style.display=\'none\'"/>';})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrA + ';line-height:1.2">' + (scorePA>0?scorePA.toFixed(1):'—') + '</div>' +
           '<div style="font-size:8px;color:var(--text-dim)">' + (projPA?projPA+' proj':'') + '</div>' +
         '</div>' +
@@ -2047,10 +2132,11 @@ async function openLineup(rosterIdA, rosterIdB, week) {
         // Right player
         '<div style="text-align:right">' +
           '<div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">' +
+            (pB&&pB.injury_status&&pB.injury_status==='Out'?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.15);border:1px solid #ff445544;border-radius:2px;padding:0 3px">OUT</span>':'') +
             '<span style="font-size:11px">' + iconB + '</span>' +
-            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameB + '</div>' +
+            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameB + (pB&&pB.years_exp===0?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:2px;padding:0 3px;margin-left:3px">R</span>':'') + '</div>' +
           '</div>' +
-          '<div style="font-size:9px;color:var(--text-dim)">' + (pB?pB.team||'FA':'') + '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim);text-align:right">' + (pB?pB.team||'FA':'') + (function(){if(!pB)return '';const s=NFL_SCHEDULE[pB.team];if(!s||!s.opp)return '';return ' ' + (s.home?'vs':'at') + ' <img src="https://sleepercdn.com/images/team_logos/nfl/'+s.opp.toLowerCase()+'.jpg" style="width:12px;height:12px;border-radius:2px;vertical-align:middle;margin-left:2px" onerror="this.style.display=\'none\'"/>';})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrB + ';line-height:1.2">' + (scorePB>0?scorePB.toFixed(1):'—') + '</div>' +
           '<div style="font-size:8px;color:var(--text-dim)">' + (projPB?projPB+' proj':'') + '</div>' +
         '</div>' +
