@@ -330,10 +330,10 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .sb-scores{display:flex;justify-content:space-between;align-items:center;padding:16px 14px 8px;}
 .sb-team-side{flex:1;}
 .sb-team-side.right{text-align:right;}
-.sb-team-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.03em;line-height:1;}
+.sb-team-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.03em;line-height:1;}
 .sb-team-abbr{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);margin-top:2px;}
 .sb-score-wrap{text-align:center;padding:0 10px;}
-.sb-score{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:var(--gold);}
+.sb-score{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;color:var(--gold);}
 .sb-score-win{color:var(--gold);}
 .sb-score-lose{color:var(--text-dim);}
 .sb-vs{font-family:'DM Mono',monospace;font-size:9px;color:var(--border);margin-top:4px;}
@@ -347,14 +347,8 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .sb-player-pts{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);font-weight:700;}
 .sb-player-name{font-size:11px;font-weight:600;}
 .sb-player-proj{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);}
-.sb-tape{padding:12px 14px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
-.sb-tape-title{font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:0.15em;margin-bottom:8px;}
-.sb-tape-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.sb-tape-cat{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-dim);text-align:center;flex:1;}
-.sb-tape-val{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;flex:1;}
-.sb-tape-val.left{text-align:left;color:var(--text);}
-.sb-tape-val.right{text-align:right;color:var(--text);}
-.sb-tape-val.win{color:var(--gold)!important;}
+.sb-tape{padding:8px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,0.1);}
+.sb-tape-title{font-family:DM Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;}
 .sb-analysis{font-size:11px;color:var(--text-muted);line-height:1.6;padding:10px 14px;border-top:1px solid var(--border);}
 .sb-refresh-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.1em;border-top:1px solid var(--border);background:var(--surface2);}
 .sb-refresh-btn:active{opacity:0.7;}
@@ -1481,7 +1475,7 @@ async function loadScoreboard(forceRefresh) {
     // Fetch matchups + projections in parallel
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=K'),
+      sleeperFetch('/projections/nfl/player/' + season + '/' + week + '?season_type=regular'),
       getPlayersDb()
     ]);
 
@@ -1536,7 +1530,7 @@ async function loadScoreboard(forceRefresh) {
       killacam:{QB:'#7',RB:'#4',WR:'#2',TE:'#7'}, nflzey:{QB:'#5',RB:'#7',WR:'#8',TE:'#6'},
       otto:{QB:'#8',RB:'#3',WR:'#7',TE:'#4'}, abab:{QB:'#6',RB:'#6',WR:'#6',TE:'#8'}
     };
-    const pwrRanks = {sandy:1,lah:2,miso:3,abab:4,killacam:5,nflzey:6,otto:7,amon:8};
+    const pwrRanks = {sandy:1,lah:2,miso:3,amon:4,killacam:5,nflzey:6,otto:7,abab:8};
     const allTimeRec = {sandy:'20-6',lah:'19-7',miso:'13-13',amon:'7-19',killacam:'15-11',nflzey:'6-7',otto:'3-10',abab:'8-18'};
 
     function getProj(entry) {
@@ -1550,19 +1544,28 @@ async function loadScoreboard(forceRefresh) {
       return Math.round(proj * 10) / 10;
     }
 
-    function getTopScorer(entry) {
-      if (!playersDb) return null;
-      let best = null, bestPts = -1;
+    function getTop3Scorers(entry) {
+      if (!playersDb) return [];
       const pts = entry.players_points || {};
-      Object.entries(pts).forEach(([pid, score]) => {
-        if (score > bestPts) {
-          bestPts = score;
-          best = pid;
-        }
-      });
-      if (!best) return null;
-      const p = playersDb[best];
-      return {name: p ? (p.full_name || p.first_name + ' ' + p.last_name) : 'Unknown', pts: bestPts};
+      const starterSet = new Set(entry.starters || []);
+      const taxiSet = new Set(entry.taxi || []);
+      return Object.entries(pts)
+        .filter(([pid, score]) => score > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([pid, score]) => {
+          const p = playersDb[pid];
+          const inStarters = starterSet.has(pid);
+          const inTaxi = taxiSet.has(pid);
+          const ls = inStarters ? 'ACTIVE' : inTaxi ? 'PRACTICE SQUAD' : 'BENCHED';
+          const lsColor = inStarters ? 'var(--accent)' : inTaxi ? 'var(--gold-dim)' : 'var(--red)';
+          return {
+            name: p ? (p.full_name || p.first_name + ' ' + p.last_name) : 'Unknown',
+            pts: score,
+            ls: ls,
+            lsColor: lsColor
+          };
+        });
     }
 
     function getTop3Proj(entry) {
@@ -1582,39 +1585,58 @@ async function loadScoreboard(forceRefresh) {
         .slice(0, 3);
     }
 
-    function buildAnalysis(tidA, tidB) {
+    function buildAnalysis(tidA, tidB, scoreA, scoreB, week) {
       const tA = TEAMS.find(t => t.id === tidA);
       const tB = TEAMS.find(t => t.id === tidB);
       if (!tA || !tB) return '';
       const lines = [];
+
+      // Dynamic streak/record angle based on current season
+      const recA = tA.sleeperRecord ? tA.sleeperRecord.split('-') : null;
+      const recB = tB.sleeperRecord ? tB.sleeperRecord.split('-') : null;
+
+      if (recA && recB && week > 1) {
+        const wA = parseInt(recA[0]), lA = parseInt(recA[1]);
+        const wB = parseInt(recB[0]), lB = parseInt(recB[1]);
+        if (lA >= 2 && wA === 0) lines.push(teamNames[tidA] + ' is searching for their first win after a tough start to the season.');
+        else if (wA >= 2 && lA === 0) lines.push(teamNames[tidA] + ' comes in undefeated at ' + wA + '-0 — one of the hottest teams in the league.');
+        else if (lA >= 2) lines.push('After losing ' + lA + ' straight, ' + teamNames[tidA] + ' desperately needs a bounce-back performance here.');
+        else if (wA >= 2) lines.push(teamNames[tidA] + ' has won ' + wA + ' straight and is rolling heading into this matchup.');
+
+        if (lB >= 2 && wB === 0) lines.push(teamNames[tidB] + ' is also winless and needs this one badly.');
+        else if (wB >= 2 && lB === 0) lines.push(teamNames[tidB] + ' is equally hot at ' + wB + '-0 — this is a clash of unbeatens.');
+        else if (lB >= 2) lines.push(teamNames[tidB] + ' has also dropped ' + lB + ' in a row and needs to stop the bleeding.');
+      }
+
+      // High/low scorer context
+      if (week > 1) {
+        const ppgA = currentPPG[tidA] || PPG_2025[tidA];
+        const ppgB = currentPPG[tidB] || PPG_2025[tidB];
+        if (scoreA > 0 && scoreA > ppgA * 1.15) lines.push(teamNames[tidA] + ' is having a monster week — already tracking above their season average.');
+        else if (scoreA > 0 && scoreA < ppgA * 0.75) lines.push(teamNames[tidA] + ' is struggling offensively today, sitting well below their season average.');
+        if (scoreB > 0 && scoreB > ppgB * 1.15) lines.push(teamNames[tidB] + ' is outperforming expectations so far this week.');
+      }
 
       // Power ranking angle
       const pwrA = pwrRanks[tidA], pwrB = pwrRanks[tidB];
       if (Math.abs(pwrA - pwrB) >= 3) {
         const fav = pwrA < pwrB ? teamNames[tidA] : teamNames[tidB];
         const dog = pwrA < pwrB ? teamNames[tidB] : teamNames[tidA];
-        lines.push(fav + ' is a significant power ranking favorite over ' + dog + ' heading into this matchup.');
+        lines.push(fav + ' is a clear power ranking favorite here but upsets have happened all season.');
       }
 
-      // OVR angle
-      if (tA.ovr && tB.ovr && Math.abs(tA.ovr - tB.ovr) >= 5) {
-        const edge = tA.ovr > tB.ovr ? teamNames[tidA] : teamNames[tidB];
-        lines.push(edge + ' holds a clear roster advantage on paper.');
-      }
-
-      // Position matchup angle
+      // Position matchup edge
       const prA = posRanks[tidA] || {}, prB = posRanks[tidB] || {};
-      const posNames = {QB:'quarterback',RB:'backfield',WR:'wide receiver',TE:'tight end'};
+      const posNames = {QB:'QB',RB:'backfield',WR:'WR',TE:'TE'};
       ['QB','RB','WR','TE'].forEach(pos => {
         const rA = parseInt((prA[pos]||'#9').replace('#',''));
         const rB = parseInt((prB[pos]||'#9').replace('#',''));
-        if (rA <= 2 && rB >= 6) lines.push(teamNames[tidA] + ' dominates at ' + posNames[pos] + ' with the ' + prA[pos] + ' unit in the league.');
-        else if (rB <= 2 && rA >= 6) lines.push(teamNames[tidB] + ' dominates at ' + posNames[pos] + ' with the ' + prB[pos] + ' unit in the league.');
+        if (rA <= 2 && rB >= 6) lines.push(teamNames[tidA] + ' has the ' + prA[pos] + ' ' + posNames[pos] + ' room in the league — a major edge today.');
+        else if (rB <= 2 && rA >= 6) lines.push(teamNames[tidB] + ' counters with the ' + prB[pos] + ' ' + posNames[pos] + ' unit in the league.');
       });
 
       // All-time record
-      const recA = allTimeRec[tidA], recB = allTimeRec[tidB];
-      lines.push('All-time records: ' + teamNames[tidA] + ' ' + recA + ' · ' + teamNames[tidB] + ' ' + recB + '.');
+      lines.push('All-time: ' + teamNames[tidA] + ' leads ' + (allTimeRec[tidA]||'?') + ' vs ' + (allTimeRec[tidB]||'?') + '.');
 
       return lines.slice(0, 3).join(' ');
     }
@@ -1628,6 +1650,13 @@ async function loadScoreboard(forceRefresh) {
         '<div class="sb-tape-cat">' + label + '</div>' +
         '<div class="sb-tape-val right' + (bWins ? ' win' : '') + '">' + valB + '</div>' +
         '</div>';
+    }
+
+    function buildTapeCell(valA, label, valB, aWins) {
+      const bWins = !aWins && valA !== valB;
+      return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + valA + '</div>' +
+        '<div style="font-size:8px;color:var(--text-dim);text-align:center;letter-spacing:0.04em;white-space:nowrap">' + label + '</div>' +
+        '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + valB + '</div>';
     }
 
     let html = '';
@@ -1646,11 +1675,11 @@ async function loadScoreboard(forceRefresh) {
       const scoreB = Math.round((b.points || 0) * 100) / 100;
       const projA = getProj(a);
       const projB = getProj(b);
-      const topA = getTopScorer(a);
-      const topB = getTopScorer(b);
+      const top3ScorersA = getTop3Scorers(a);
+      const top3ScorersB = getTop3Scorers(b);
       const top3A = getTop3Proj(a);
       const top3B = getTop3Proj(b);
-      const analysis = buildAnalysis(tidA, tidB);
+      const analysis = buildAnalysis(tidA, tidB, scoreA, scoreB, week);
       const tA = TEAMS.find(t => t.id === tidA);
       const tB = TEAMS.find(t => t.id === tidB);
 
@@ -1671,6 +1700,7 @@ async function loadScoreboard(forceRefresh) {
         // Live scores — most prominent
         '<div class="sb-scores">' +
           '<div class="sb-team-side">' +
+            '<div style="margin-bottom:4px">' + logo(tidA, 36) + '</div>' +
             '<div class="sb-team-name" style="color:' + (aWinning||!hasScores?'var(--gold)':'var(--text-dim)') + '">' + teamNames[tidA] + '</div>' +
             '<div class="sb-team-abbr">' + teamAbbrs[tidA] + ' · PWR #' + pwrRanks[tidA] + ' · ' + (tA?tA.ovr:'?') + ' OVR</div>' +
           '</div>' +
@@ -1683,6 +1713,7 @@ async function loadScoreboard(forceRefresh) {
             '<div class="sb-vs">' + (hasScores ? 'LIVE SCORE' : 'WEEK ' + week) + '</div>' +
           '</div>' +
           '<div class="sb-team-side right">' +
+            '<div style="margin-bottom:4px;display:flex;justify-content:flex-end">' + logo(tidB, 36) + '</div>' +
             '<div class="sb-team-name" style="color:' + (bWinning||!hasScores?'var(--gold)':'var(--text-dim)') + '">' + teamNames[tidB] + '</div>' +
             '<div class="sb-team-abbr">' + teamAbbrs[tidB] + ' · PWR #' + pwrRanks[tidB] + ' · ' + (tB?tB.ovr:'?') + ' OVR</div>' +
           '</div>' +
@@ -1690,25 +1721,40 @@ async function loadScoreboard(forceRefresh) {
 
         // Projected scores
         '<div class="sb-proj-row">' +
-          '<div class="sb-proj-val">' + (projA > 0 ? 'PROJ: ' + projA : '—') + '</div>' +
-          '<div class="sb-proj-label">PROJECTED</div>' +
-          '<div class="sb-proj-val" style="text-align:right">' + (projB > 0 ? 'PROJ: ' + projB : '—') + '</div>' +
+          '<div class="sb-proj-val">' + (projA > 0 ? projA + ' Proj' : '—') + '</div>' +
+          '<div class="sb-proj-label"></div>' +
+          '<div class="sb-proj-val" style="text-align:right">' + (projB > 0 ? projB + ' Proj' : '—') + '</div>' +
         '</div>' +
 
-        // Top scorer
-        (hasScores && (topA || topB) ?
+        // Top 3 scorers with L.S. tags
+        (hasScores && (top3ScorersA.length || top3ScorersB.length) ?
         '<div class="sb-section">' +
-          '<div class="sb-section-title">LEADING SCORER</div>' +
-          '<div class="sb-two-col">' +
-            '<div class="sb-player-row">' +
-              '<div class="sb-player-name">' + (topA ? topA.name : '—') + '</div>' +
-              '<div class="sb-player-pts">' + (topA ? topA.pts.toFixed(1) : '—') + '</div>' +
-            '</div>' +
-            '<div class="sb-player-row" style="text-align:right;justify-content:flex-end;gap:8px;">' +
-              '<div class="sb-player-pts">' + (topB ? topB.pts.toFixed(1) : '—') + '</div>' +
-              '<div class="sb-player-name">' + (topB ? topB.name : '—') + '</div>' +
-            '</div>' +
-          '</div>' +
+          '<div class="sb-section-title" style="text-align:center">TOP SCORERS</div>' +
+          (function() {
+            const maxRows = Math.max(top3ScorersA.length, top3ScorersB.length);
+            let rows = '';
+            for (let i = 0; i < maxRows; i++) {
+              const pA = top3ScorersA[i];
+              const pB = top3ScorersB[i];
+              rows += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">' +
+                '<div style="flex:1">' +
+                  (pA ? '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+                    '<div class="sb-player-name">' + pA.name + '</div>' +
+                    '<div class="sb-player-pts" style="margin-left:6px">' + pA.pts.toFixed(1) + '</div>' +
+                  '</div>' +
+                  '<div style="font-family:DM Mono,monospace;font-size:8px;color:' + pA.lsColor + ';letter-spacing:0.06em">' + pA.ls + '</div>' : '') +
+                '</div>' +
+                '<div style="flex:1;text-align:right">' +
+                  (pB ? '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-direction:row-reverse">' +
+                    '<div class="sb-player-name">' + pB.name + '</div>' +
+                    '<div class="sb-player-pts" style="margin-right:6px">' + pB.pts.toFixed(1) + '</div>' +
+                  '</div>' +
+                  '<div style="font-family:DM Mono,monospace;font-size:8px;color:' + pB.lsColor + ';letter-spacing:0.06em;text-align:right">' + pB.ls + '</div>' : '') +
+                '</div>' +
+              '</div>';
+            }
+            return rows;
+          })() +
         '</div>' : '') +
 
         // Top 3 projected
@@ -1748,9 +1794,65 @@ async function loadScoreboard(forceRefresh) {
         (analysis ?
         '<div class="sb-analysis">' + analysis + '</div>' : '') +
 
-        '<div class="lu-btn" onclick="openLineup(' + a.roster_id + ',' + b.roster_id + ',' + week + ')">' +
-          'VIEW LINEUPS ↓' +
-        '</div>' +
+        // Position breakdown chart
+        (hasScores ?
+        (function() {
+          const SLOTS = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
+          const posColors = {QB:'#4a9eff',RB:'#4caf72',WR:'#e8904a',TE:'#b04aff',WRT:'#888',K:'#aaa'};
+          const posLabels = ['QB','RB','WR','TE','FLX','K'];
+          const posKeys   = ['QB','RB','WR','TE','WRT','K'];
+
+          function getPosBreakdown(entry) {
+            const pts = entry.players_points || {};
+            const starters = entry.starters || [];
+            const totals = {QB:0,RB:0,WR:0,TE:0,WRT:0,K:0};
+            starters.forEach((pid, i) => {
+              const slot = SLOTS[i] || 'WRT';
+              const score = pts[pid] || 0;
+              if (score > 0) totals[slot] = (totals[slot]||0) + score;
+            });
+            return totals;
+          }
+
+          const bdA = getPosBreakdown(a);
+          const bdB = getPosBreakdown(b);
+          const totalA = Object.values(bdA).reduce((s,v) => s+v, 0);
+          const totalB = Object.values(bdB).reduce((s,v) => s+v, 0);
+
+          function buildBar(bd, total) {
+            if (total === 0) return '<div style="height:8px;background:var(--border);border-radius:4px"></div>';
+            let bar = '<div style="display:flex;height:10px;border-radius:4px;overflow:hidden;gap:1px">';
+            posKeys.forEach(pos => {
+              const pct = bd[pos] ? Math.round(bd[pos]/total*100) : 0;
+              if (pct > 0) bar += '<div style="width:' + pct + '%;background:' + posColors[pos] + ';min-width:2px" title="' + pos + ' ' + pct + '%"></div>';
+            });
+            bar += '</div>';
+            return bar;
+          }
+
+          function buildLegend(bd, total) {
+            return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">' +
+              posKeys.map((pos, i) => {
+                const pct = bd[pos] && total > 0 ? Math.round(bd[pos]/total*100) : 0;
+                if (pct === 0) return '';
+                return '<div style="display:flex;align-items:center;gap:2px;font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' +
+                  '<div style="width:6px;height:6px;border-radius:1px;background:' + posColors[pos] + ';flex-shrink:0"></div>' +
+                  posLabels[i] + ' ' + pct + '%' +
+                '</div>';
+              }).join('') +
+            '</div>';
+          }
+
+          return '<div style="padding:10px 14px;border-top:0.5px solid var(--border)">' +
+            '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:8px">POINTS BY POSITION</div>' +
+            '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim);margin-bottom:3px">' + teamNames[tidA] + '</div>' +
+            buildBar(bdA, totalA) + buildLegend(bdA, totalA) +
+            '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-dim);margin-bottom:3px;margin-top:8px">' + teamNames[tidB] + '</div>' +
+            buildBar(bdB, totalB) + buildLegend(bdB, totalB) +
+          '</div>';
+        })() : '') +
+
+        '<div onclick="openLineup(' + a.roster_id + ',' + b.roster_id + ',' + week + ')" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;font-family:DM Mono,monospace;font-size:10px;font-weight:700;color:var(--bg);letter-spacing:0.12em;cursor:pointer;background:var(--gold);border-top:1px solid var(--gold)">VIEW MATCHUP ↓</div>' +
 
       '</div>';
     });
@@ -1792,7 +1894,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     const season = '2026';
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position%5B%5D=QB&position%5B%5D=RB&position%5B%5D=WR&position%5B%5D=TE&position%5B%5D=K'),
+      sleeperFetch('/projections/nfl/player/' + season + '/' + week + '?season_type=regular'),
       getPlayersDb()
     ]);
 
@@ -1873,19 +1975,8 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       '</div>';
     }
 
-    function buildTeamLineup(entry, tid) {
-      const starters = entry.starters || [];
-      const pts = entry.players_points || {};
-      const SLOTS = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
-      let html = '';
-      html += '<div class="lu-total-row"><div class="lu-total-name">' + (teamNames[tid]||tid) + '</div><div class="lu-total-pts">' + (entry.points||0).toFixed(2) + '</div></div>';
-      html += '<div class="lu-section">STARTERS</div>';
-      starters.forEach((pid, i) => {
-        const slot = SLOTS[i] || 'BN';
-        html += buildPlayerRow(pid, slot, pts[pid] || 0, true);
-      });
-      return html;
-    }
+    const SLOTS = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
+    const posColorsLocal = {QB:'#4a9eff',RB:'#4caf72',WR:'#e8904a',TE:'#b04aff',WRT:'#888',K:'#aaa'};
 
     let html = '';
 
@@ -1898,19 +1989,80 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       '</div>' +
       '<div class="lineup-prob-bar"><div class="lineup-prob-fill" style="width:' + probA + '%"></div></div>' +
       '<div class="lineup-prob-labels" style="margin-top:4px">' +
-        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + (teamNames[tidA]||tidA) + ' · ' + scoreA.toFixed(2) + ' pts</span>' +
-        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + scoreB.toFixed(2) + ' pts · ' + (teamNames[tidB]||tidB) + '</span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + (teamNames[tidA]||tidA) + ' · ' + scoreA.toFixed(2) + '</span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim)">' + scoreB.toFixed(2) + ' · ' + (teamNames[tidB]||tidB) + '</span>' +
       '</div>' +
     '</div>';
 
-    // Team A lineup
-    html += buildTeamLineup(entryA, tidA);
+    // Column headers
+    html += '<div style="display:grid;grid-template-columns:1fr 36px 1fr;background:var(--surface2);padding:7px 12px;border-bottom:1px solid var(--border)">' +
+      '<div style="font-family:DM Mono,monospace;font-size:9px;font-weight:700;color:var(--gold)">' + (teamNames[tidA]||tidA) + '</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);text-align:center">POS</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:9px;font-weight:700;color:var(--text-dim);text-align:right">' + (teamNames[tidB]||tidB) + '</div>' +
+    '</div>';
 
-    // Divider
-    html += '<div style="height:8px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)"></div>';
+    // Side-by-side rows
+    const startersA = entryA.starters || [];
+    const startersB = entryB.starters || [];
+    const ptsA = entryA.players_points || {};
+    const ptsB = entryB.players_points || {};
+    const maxSlots = Math.max(startersA.length, startersB.length);
 
-    // Team B lineup
-    html += buildTeamLineup(entryB, tidB);
+    for (let i = 0; i < maxSlots; i++) {
+      const pidA = startersA[i];
+      const pidB = startersB[i];
+      const slot = SLOTS[i] || 'FLX';
+      const posColor = posColorsLocal[slot] || '#888';
+
+      const pA = pidA && pidA !== '0' ? playersDb[pidA] : null;
+      const pB = pidB && pidB !== '0' ? playersDb[pidB] : null;
+      const nameA = pA ? (pA.full_name || pA.first_name + ' ' + pA.last_name) : '—';
+      const nameB = pB ? (pB.full_name || pB.first_name + ' ' + pB.last_name) : '—';
+      const scorePA = Math.round(((ptsA[pidA]||0)) * 10)/10;
+      const scorePB = Math.round(((ptsB[pidB]||0)) * 10)/10;
+      const projPA = projections && projections[pidA] ? Math.round((projections[pidA].pts_ppr||0)*10)/10 : null;
+      const projPB = projections && projections[pidB] ? Math.round((projections[pidB].pts_ppr||0)*10)/10 : null;
+
+      // Hot/cold
+      const iconA = scorePA > 0 && projPA ? (scorePA/projPA >= 1.15 ? '🔥' : scorePA/projPA <= 0.85 ? '🧊' : '') : '';
+      const iconB = scorePB > 0 && projPB ? (scorePB/projPB >= 1.15 ? '🔥' : scorePB/projPB <= 0.85 ? '🧊' : '') : '';
+      const clrA = iconA==='🔥'?'#ff6b35':iconA==='🧊'?'#4fc3f7':scorePA>0?'var(--gold)':'var(--text-dim)';
+      const clrB = iconB==='🔥'?'#ff6b35':iconB==='🧊'?'#4fc3f7':scorePB>0?'var(--gold)':'var(--text-dim)';
+
+      html += '<div style="display:grid;grid-template-columns:1fr 36px 1fr;padding:7px 12px;border-bottom:1px solid rgba(42,42,69,0.4);align-items:center">' +
+        // Left player
+        '<div>' +
+          '<div style="display:flex;align-items:center;gap:3px">' +
+            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameA + '</div>' +
+            '<span style="font-size:11px">' + iconA + '</span>' +
+          '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + '</div>' +
+          '<div style="font-size:14px;font-weight:700;color:' + clrA + ';line-height:1.2">' + (scorePA>0?scorePA.toFixed(1):'—') + '</div>' +
+          '<div style="font-size:8px;color:var(--text-dim)">' + (projPA?projPA+' proj':'') + '</div>' +
+        '</div>' +
+        // Position badge
+        '<div style="text-align:center">' +
+          '<div style="font-family:DM Mono,monospace;font-size:8px;padding:2px 4px;border-radius:3px;background:' + posColor + '22;color:' + posColor + '">' + slot + '</div>' +
+        '</div>' +
+        // Right player
+        '<div style="text-align:right">' +
+          '<div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">' +
+            '<span style="font-size:11px">' + iconB + '</span>' +
+            '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameB + '</div>' +
+          '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim)">' + (pB?pB.team||'FA':'') + '</div>' +
+          '<div style="font-size:14px;font-weight:700;color:' + clrB + ';line-height:1.2">' + (scorePB>0?scorePB.toFixed(1):'—') + '</div>' +
+          '<div style="font-size:8px;color:var(--text-dim)">' + (projPB?projPB+' proj':'') + '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    // Totals row
+    html += '<div style="display:grid;grid-template-columns:1fr 36px 1fr;padding:10px 12px;background:var(--surface2);border-top:1px solid var(--gold-dim)">' +
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--gold)">' + scoreA.toFixed(2) + '</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);text-align:center;align-self:center">TOT</div>' +
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text-dim);text-align:right">' + scoreB.toFixed(2) + '</div>' +
+    '</div>';
 
     content.innerHTML = html;
 
