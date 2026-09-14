@@ -349,6 +349,12 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .sb-player-proj{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);}
 .sb-tape{padding:8px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,0.1);}
 .sb-tape-title{font-family:DM Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;}
+.sb-tape-row{display:grid;grid-template-columns:1fr 100px 1fr;align-items:center;gap:3px 0;margin-bottom:4px;}
+.sb-tape-val{font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--text-dim);}
+.sb-tape-val.left{text-align:left;}
+.sb-tape-val.right{text-align:right;}
+.sb-tape-val.win{color:var(--gold);}
+.sb-tape-cat{font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);text-align:center;letter-spacing:0.06em;opacity:0.7;white-space:nowrap;}
 .sb-analysis{font-size:11px;color:var(--text-muted);line-height:1.6;padding:10px 14px;border-top:1px solid var(--border);}
 .sb-refresh-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.1em;border-top:1px solid var(--border);background:var(--surface2);}
 .sb-refresh-btn:active{opacity:0.7;}
@@ -1112,6 +1118,8 @@ const ESPN_S1 = {
 };
 
 // All Sleeper season IDs — add new ones each year
+// All Sleeper season IDs — add new season IDs each year
+// Current season (2026) is included in all-time after Tuesday 12pm cutoff
 const SLEEPER_SEASONS = [
   {id:'1260421436510580736', year:2025},
   {id:'1314793814354825216', year:2026},
@@ -1126,7 +1134,7 @@ async function computeAllTimeRecords() {
     });
 
     // For each Sleeper season, build a roster_id→team_id map then count matchup wins
-    for (const season of SLEEPER_SEASONS) {
+    for (const season of seasonsToCount) {
       try {
         // Fetch rosters to build THIS season's roster_id → team_id map
         // (roster IDs can differ between seasons)
@@ -1744,7 +1752,7 @@ async function loadScoreboard(forceRefresh) {
     // Fetch matchups + projections in parallel
     const [freshMatchups, projections, playersDb] = await Promise.all([
       matchups ? Promise.resolve(null) : sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&order_by=pts_ppr'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular'),
       getPlayersDb()
     ]);
 
@@ -1989,7 +1997,7 @@ async function loadScoreboard(forceRefresh) {
     function buildTapeCell(valA, label, valB, aWins) {
       const bWins = !aWins && valA !== valB;
       return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + valA + '</div>' +
-        '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
+        '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
         '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + valB + '</div>';
     }
 
@@ -2053,11 +2061,12 @@ async function loadScoreboard(forceRefresh) {
         '</div>' +
 
         // Projected scores
+        (projA > 0 || projB > 0 ?
         '<div class="sb-proj-row">' +
           '<div class="sb-proj-val">' + (projA > 0 ? projA + ' Proj' : '—') + '</div>' +
           '<div class="sb-proj-label"></div>' +
           '<div class="sb-proj-val" style="text-align:right">' + (projB > 0 ? projB + ' Proj' : '—') + '</div>' +
-        '</div>' +
+        '</div>' : '') +
 
         // Top 3 scorers with L.S. tags
         (hasScores && (top3ScorersA.length || top3ScorersB.length) ?
@@ -2091,7 +2100,7 @@ async function loadScoreboard(forceRefresh) {
         '</div>' : '') +
 
         // Top 3 projected - side by side ESPN style
-        (top3A.length || top3B.length ?
+        ((top3A.some(p=>p.pts>0) || top3B.some(p=>p.pts>0)) ?
         '<div class="sb-section">' +
           '<div class="sb-section-title" style="text-align:center">TOP PROJECTED</div>' +
           (function() {
@@ -2124,7 +2133,7 @@ async function loadScoreboard(forceRefresh) {
           function tc(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
             return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
-              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
+              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
               '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
           }
           const ppgA = parseFloat(currentPPG[tidA]||PPG_2025[tidA]);
@@ -2134,12 +2143,12 @@ async function loadScoreboard(forceRefresh) {
           function tcPPG(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
             return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
-              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
+              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
               '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
           }
           return '<div class="sb-tape">' +
             '<div class="sb-tape-title">⚔️ TALE OF THE TAPE</div>' +
-            '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px 8px;align-items:center;text-align:left">' +
+            '<div>' +
               tcPPG(ppgLabelA, 'AVG PPG', ppgLabelB, ppgA > ppgB) +
               tc('#'+pwrRanks[tidA]+' · '+(tA?tA.ovr:'?')+' OVR', 'PWR · OVR', '#'+pwrRanks[tidB]+' · '+(tB?tB.ovr:'?')+' OVR', pwrRanks[tidA]<pwrRanks[tidB]) +
               tc(posRanks[tidA]?posRanks[tidA].QB:'?', 'QB Pos. Ranking', posRanks[tidB]?posRanks[tidB].QB:'?', parseInt((posRanks[tidA]?posRanks[tidA].QB:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].QB:'#9').replace('#',''))) +
@@ -2257,13 +2266,23 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     const season = '2026';
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&order_by=pts_ppr'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular'),
       getPlayersDb()
     ]);
 
     if (!matchups || !playersDb) {
       content.innerHTML = '<div style="padding:24px;text-align:center;font-family:DM Mono,monospace;font-size:10px;color:var(--text-dim)">Unable to load lineup data.</div>';
       return;
+    }
+
+    // Helper to extract projection points regardless of Sleeper response format
+    function luGetProj(pid) {
+      if (!projections || !pid || pid === '0') return 0;
+      const p = projections[pid];
+      if (!p) return 0;
+      if (p.pts_ppr !== undefined) return p.pts_ppr;
+      if (p.stats && p.stats.pts_ppr !== undefined) return p.stats.pts_ppr;
+      return 0;
     }
 
     const entryA = matchups.find(m => m.roster_id == rosterIdA || String(m.roster_id) == String(rosterIdA));
@@ -2280,9 +2299,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     function getTotalProj(entry) {
       let proj = 0;
       (entry.starters||[]).forEach(pid => {
-        if (pid==='0') return;
-        const p = projections && projections[pid];
-        if (p && p.pts_ppr) proj += p.pts_ppr;
+        proj += luGetProj(pid);
       });
       return proj;
     }
@@ -2297,8 +2314,8 @@ async function openLineup(rosterIdA, rosterIdB, week) {
 
     // Get player avg score (use 2025 PPG as proxy for now, improve with season data)
     function getPlayerAvg(pid) {
-      if (!projections || !projections[pid]) return null;
-      return projections[pid].pts_ppr ? Math.round(projections[pid].pts_ppr * 10)/10 : null;
+      var v = luGetProj(pid);
+      return v > 0 ? Math.round(v * 10) / 10 : null;
     }
 
     function buildPlayerRow(pid, slot, playerPts, isLeft) {
@@ -2312,7 +2329,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       const name = p ? (p.full_name || (p.first_name + ' ' + p.last_name)) : 'Unknown';
       const nflTeam = p ? (p.team || 'FA') : 'FA';
       const pts = Math.round((playerPts || 0) * 100) / 100;
-      const proj = projections && projections[pid] ? Math.round((projections[pid].pts_ppr || 0) * 10) / 10 : null;
+      const proj = (function(){var v=luGetProj(pid);return v>0?Math.round(v*10)/10:null;})();
 
       // Hot/cold: 15% threshold
       let icon = '';
@@ -2383,8 +2400,8 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       const nameB = pB ? (pB.full_name || pB.first_name + ' ' + pB.last_name) : '—';
       const scorePA = Math.round(((ptsA[pidA]||0)) * 10)/10;
       const scorePB = Math.round(((ptsB[pidB]||0)) * 10)/10;
-      const projPA = projections && pidA ? (function(){const v=getProjPts(pidA);return v>0?Math.round(v*10)/10:null;})() : null;
-      const projPB = projections && pidB ? (function(){const v=getProjPts(pidB);return v>0?Math.round(v*10)/10:null;})() : null;
+      const projPA = (function(){var v=luGetProj(pidA);return v>0?Math.round(v*10)/10:null;})();
+      const projPB = (function(){var v=luGetProj(pidB);return v>0?Math.round(v*10)/10:null;})();
 
       // Hot/cold
       const iconA = scorePA > 0 && projPA ? (scorePA/projPA >= 1.15 ? '🔥' : scorePA/projPA <= 0.85 ? '🧊' : '') : '';
@@ -2402,7 +2419,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
           '</div>' +
           '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + (function(){if(!pA)return '';const s=NFL_SCHEDULE[pA.team];if(!s||!s.opp)return '';return ' '+(s.home?'vs':'at')+' '+(NFL_TEAM_NAMES[s.opp]||s.opp);})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrA + ';line-height:1.2">' + (scorePA>0?scorePA.toFixed(1):'—') + '</div>' +
-          '<div style="font-size:8px;color:var(--text-dim)">' + (projPA?projPA+' proj':'') + '</div>' +
+          (projPA ? '<div style="font-size:8px;color:var(--text-dim)">' + projPA + ' proj</div>' : '') +
         '</div>' +
         // Position badge
         '<div style="text-align:center">' +
@@ -2417,7 +2434,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
           '</div>' +
           '<div style="font-size:9px;color:var(--text-dim);text-align:right">' + (pB?pB.team||'FA':'') + (function(){if(!pB)return '';const s=NFL_SCHEDULE[pB.team];if(!s||!s.opp)return '';return ' '+(s.home?'vs':'at')+' '+(NFL_TEAM_NAMES[s.opp]||s.opp);})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrB + ';line-height:1.2">' + (scorePB>0?scorePB.toFixed(1):'—') + '</div>' +
-          '<div style="font-size:8px;color:var(--text-dim)">' + (projPB?projPB+' proj':'') + '</div>' +
+          (projPB ? '<div style="font-size:8px;color:var(--text-dim)">' + projPB + ' proj</div>' : '') +
         '</div>' +
       '</div>';
     }
@@ -2430,65 +2447,42 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     '</div>';
 
     // Position scoring breakdown
-    (function() {
-      // SLOTS: QB QB RB RB RB WR WR WR TE WRT WRT WRT K
-      const SLOT_MAP = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
-      const groups = [
-        {label:'QBs',   slots:['QB'],         color:'#4a9eff'},
-        {label:'RBs',   slots:['RB'],         color:'#4caf72'},
-        {label:'WRs',   slots:['WR'],         color:'#e8904a'},
-        {label:'Flex',  slots:['WRT'],        color:'#a855f7'},
-        {label:'Other', slots:['TE','K'],     color:'#888'},
-      ];
+    var pbpSlotMap = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
+    var pbpGroups = [
+      {label:'QBs',  slots:['QB'],      color:'#4a9eff'},
+      {label:'RBs',  slots:['RB'],      color:'#4caf72'},
+      {label:'WRs',  slots:['WR'],      color:'#e8904a'},
+      {label:'Flex', slots:['WRT'],     color:'#a855f7'},
+      {label:'Other',slots:['TE','K'],  color:'#888'},
+    ];
+    var pbpTotA = {QB:0,RB:0,WR:0,WRT:0,TE:0,K:0};
+    var pbpTotB = {QB:0,RB:0,WR:0,WRT:0,TE:0,K:0};
+    startersA.forEach(function(pid,i){ var sl=pbpSlotMap[i]||'WRT'; pbpTotA[sl]=(pbpTotA[sl]||0)+(ptsA[pid]||0); });
+    startersB.forEach(function(pid,i){ var sl=pbpSlotMap[i]||'WRT'; pbpTotB[sl]=(pbpTotB[sl]||0)+(ptsB[pid]||0); });
 
-      function getGroupPts(starters, pts) {
-        const totals = {QB:0,RB:0,WR:0,WRT:0,TE:0,K:0};
-        starters.forEach((pid,i) => {
-          const slot = SLOT_MAP[i] || 'WRT';
-          totals[slot] = (totals[slot]||0) + (pts[pid]||0);
-        });
-        return totals;
-      }
+    html += '<div style="background:var(--surface);border-top:1px solid var(--border);padding:10px 12px">' +
+      '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:8px;text-align:center">POINTS BY POSITION</div>';
 
-      const grpA = getGroupPts(startersA, ptsA);
-      const grpB = getGroupPts(startersB, ptsB);
-
-      html += '<div style="background:var(--surface);border-top:1px solid var(--border);padding:10px 12px">' +
-        '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:8px;text-align:center">POINTS BY POSITION</div>';
-
-      groups.forEach(g => {
-        const vA = Math.round(g.slots.reduce((s,sl) => s + (grpA[sl]||0), 0) * 10) / 10;
-        const vB = Math.round(g.slots.reduce((s,sl) => s + (grpB[sl]||0), 0) * 10) / 10;
-        const aWins = vA > vB;
-        const bWins = vB > vA;
-        const maxVal = Math.max(vA, vB, 1);
-        const barA = Math.round(vA / maxVal * 100);
-        const barB = Math.round(vB / maxVal * 100);
-
-        html += '<div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:4px;margin-bottom:6px">' +
-          // Left side
-          '<div style="text-align:right">' +
-            '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + (vA > 0 ? vA.toFixed(1) : '—') + '</div>' +
-            '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px">' +
-              '<div style="height:4px;border-radius:2px;background:' + g.color + ';width:' + barA + '%;float:right;opacity:' + (aWins?'1':'0.4') + '"></div>' +
-            '</div>' +
-          '</div>' +
-          // Label
-          '<div style="text-align:center">' +
-            '<div style="font-family:DM Mono,monospace;font-size:7px;color:' + g.color + ';letter-spacing:0.08em;padding:2px 4px;background:' + g.color + '18;border-radius:3px">' + g.label + '</div>' +
-          '</div>' +
-          // Right side
-          '<div>' +
-            '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:' + (bWins?'var(--gold)':'var(--text-dim)') + '">' + (vB > 0 ? vB.toFixed(1) : '—') + '</div>' +
-            '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px">' +
-              '<div style="height:4px;border-radius:2px;background:' + g.color + ';width:' + barB + '%;opacity:' + (bWins?'1':'0.4') + '"></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      });
-
-      html += '</div>';
-    })();
+    pbpGroups.forEach(function(g) {
+      var vA = Math.round(g.slots.reduce(function(s,sl){return s+(pbpTotA[sl]||0);},0)*10)/10;
+      var vB = Math.round(g.slots.reduce(function(s,sl){return s+(pbpTotB[sl]||0);},0)*10)/10;
+      var aWins = vA > vB, bWins = vB > vA;
+      var maxVal = Math.max(vA, vB, 1);
+      var barA = Math.round(vA/maxVal*100);
+      var barB = Math.round(vB/maxVal*100);
+      html += '<div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:4px;margin-bottom:6px">' +
+        '<div style="text-align:right">' +
+          '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:'+(aWins?'var(--gold)':'var(--text-dim)')+'">'+( vA>0?vA.toFixed(1):'—')+'</div>' +
+          '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px"><div style="height:4px;border-radius:2px;background:'+g.color+';width:'+barA+'%;float:right;opacity:'+(aWins?'1':'0.4')+'"></div></div>' +
+        '</div>' +
+        '<div style="text-align:center"><div style="font-family:DM Mono,monospace;font-size:7px;color:'+g.color+';letter-spacing:0.08em;padding:2px 4px;background:'+g.color+'18;border-radius:3px">'+g.label+'</div></div>' +
+        '<div>' +
+          '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:'+(bWins?'var(--gold)':'var(--text-dim)')+'">'+( vB>0?vB.toFixed(1):'—')+'</div>' +
+          '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px"><div style="height:4px;border-radius:2px;background:'+g.color+';width:'+barB+'%;opacity:'+(bWins?'1':'0.4')+'"></div></div>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
 
     content.innerHTML = html;
 
