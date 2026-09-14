@@ -348,13 +348,23 @@ body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(r
 .sb-player-name{font-size:11px;font-weight:600;}
 .sb-player-proj{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);}
 .sb-tape{padding:8px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,0.1);}
+.sb-lines{padding:10px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,0.15);}
+.sb-lines-title{font-family:DM Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.12em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sb-lines-dot{width:6px;height:6px;border-radius:50%;background:#4caf72;display:inline-block;animation:pulse 2s infinite;}
+.sb-line-row{display:grid;grid-template-columns:1fr 90px 1fr;align-items:center;margin-bottom:6px;}
+.sb-line-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);}
+.sb-line-val.fav{color:var(--gold);}
+.sb-line-val.dog{color:var(--text-dim);}
+.sb-line-val.right{text-align:right;}
+.sb-line-label{font-family:DM Mono,monospace;font-size:7px;color:var(--text-dim);text-align:center;letter-spacing:0.08em;background:rgba(255,255,255,0.05);border-radius:3px;padding:2px 4px;}
 .sb-tape-title{font-family:DM Mono,monospace;font-size:8px;color:var(--gold);letter-spacing:0.12em;margin-bottom:6px;}
-.sb-tape-row{display:grid;grid-template-columns:1fr 100px 1fr;align-items:center;gap:3px 0;margin-bottom:4px;}
+.sb-tape-row{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:3px 0;margin-bottom:5px;}
 .sb-tape-val{font-family:Bebas Neue,sans-serif;font-size:14px;color:var(--text-dim);}
 .sb-tape-val.left{text-align:left;}
 .sb-tape-val.right{text-align:right;}
 .sb-tape-val.win{color:var(--gold);}
 .sb-tape-cat{font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);text-align:center;letter-spacing:0.06em;opacity:0.7;white-space:nowrap;}
+.sb-tape-grid{display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:3px 0;margin-bottom:5px;}
 .sb-analysis{font-size:11px;color:var(--text-muted);line-height:1.6;padding:10px 14px;border-top:1px solid var(--border);}
 .sb-refresh-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);cursor:pointer;letter-spacing:0.1em;border-top:1px solid var(--border);background:var(--surface2);}
 .sb-refresh-btn:active{opacity:0.7;}
@@ -626,7 +636,34 @@ const NFL_TEAM_NAMES = {
   TEN:'Titans',WAS:'Commanders'
 };
 let NFL_SCHEDULE = {};
+
+// Hardcoded fallback schedule by week — update each week
+const SCHEDULE_FALLBACK = {
+  1: {
+    BUF:{opp:'NYJ',home:true}, NYJ:{opp:'BUF',home:false},
+    BAL:{opp:'KC',home:false}, KC:{opp:'BAL',home:true},
+    PHI:{opp:'GB',home:true}, GB:{opp:'PHI',home:false},
+    DET:{opp:'LAR',home:true}, LAR:{opp:'DET',home:false},
+    SF:{opp:'MIN',home:false}, MIN:{opp:'SF',home:true},
+    CHI:{opp:'TEN',home:true}, TEN:{opp:'CHI',home:false},
+    DAL:{opp:'CLE',home:true}, CLE:{opp:'DAL',home:false},
+    MIA:{opp:'JAX',home:true}, JAX:{opp:'MIA',home:false},
+    ATL:{opp:'NO',home:true}, NO:{opp:'ATL',home:false},
+    CAR:{opp:'WAS',home:false}, WAS:{opp:'CAR',home:true},
+    IND:{opp:'HOU',home:false}, HOU:{opp:'IND',home:true},
+    LV:{opp:'LAC',home:false}, LAC:{opp:'LV',home:true},
+    NE:{opp:'CIN',home:false}, CIN:{opp:'NE',home:true},
+    NYG:{opp:'PIT',home:false}, PIT:{opp:'NYG',home:true},
+    SEA:{opp:'DEN',home:true}, DEN:{opp:'SEA',home:false},
+    ARI:{opp:'TB',home:true}, TB:{opp:'ARI',home:false},
+  }
+};
+
 async function loadNFLSchedule(week) {
+  // Apply hardcoded fallback first so matchups always show
+  if (SCHEDULE_FALLBACK[week]) {
+    Object.assign(NFL_SCHEDULE, SCHEDULE_FALLBACK[week]);
+  }
   try {
     const games = await sleeperFetch('/schedule/nfl/regular/2026/' + week);
     if (!games || !Array.isArray(games)) return;
@@ -1501,9 +1538,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const nflState = await sleeperFetch('/state/nfl');
       const currentWeek = nflState ? (nflState.display_week || nflState.week || 1) : 1;
       await loadNFLSchedule(currentWeek);
+      buildRoster(); // re-render roster now that schedule is loaded
     } catch(e) {}
     await computeAllTimeRecords();
     await loadLiveRosters();
+    buildRoster(); // re-render with live roster data + matchups
     await loadOwnershipHistory();
   }, 500);
 });
@@ -1872,9 +1911,11 @@ async function loadScoreboard(forceRefresh) {
       if (!projections || !pid || pid === '0') return 0;
       const p = projections[pid];
       if (!p) return 0;
-      // Handle both {pts_ppr: X} and {stats: {pts_ppr: X}} formats
-      if (p.pts_ppr !== undefined) return p.pts_ppr;
-      if (p.stats && p.stats.pts_ppr !== undefined) return p.stats.pts_ppr;
+      // Sleeper projections: try all known response formats
+      if (p.pts_ppr !== undefined && p.pts_ppr > 0) return p.pts_ppr;
+      if (p.projected_pts_ppr !== undefined && p.projected_pts_ppr > 0) return p.projected_pts_ppr;
+      if (p.stats && p.stats.pts_ppr !== undefined && p.stats.pts_ppr > 0) return p.stats.pts_ppr;
+      if (p.stats && p.stats.pts_half_ppr !== undefined && p.stats.pts_half_ppr > 0) return p.stats.pts_half_ppr;
       return 0;
     }
     function getProj(entry) {
@@ -1894,7 +1935,7 @@ async function loadScoreboard(forceRefresh) {
       return Object.entries(pts)
         .filter(([pid, score]) => score > 0)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
+        .slice(0, 5)
         .map(([pid, score]) => {
           const p = playersDb[pid];
           const inStarters = starterSet.has(pid);
@@ -1996,9 +2037,11 @@ async function loadScoreboard(forceRefresh) {
 
     function buildTapeCell(valA, label, valB, aWins) {
       const bWins = !aWins && valA !== valB;
-      return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + valA + '</div>' +
+      return '<div class="sb-tape-grid">' +
+        '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + valA + '</div>' +
         '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
-        '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + valB + '</div>';
+        '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + valB + '</div>' +
+      '</div>';
     }
 
     let html = '';
@@ -2068,6 +2111,65 @@ async function loadScoreboard(forceRefresh) {
           '<div class="sb-proj-val" style="text-align:right">' + (projB > 0 ? projB + ' Proj' : '—') + '</div>' +
         '</div>' : '') +
 
+        // Betting Lines — always show, based on live projections or PPG fallback
+        (function() {
+          // Spread: projA - projB, rounded to .5
+          var rawSpread = projA - projB;
+          var spread = Math.round(rawSpread * 2) / 2;
+          var spreadA = spread > 0 ? '-' + spread.toFixed(1) : spread < 0 ? '+' + Math.abs(spread).toFixed(1) : 'PK';
+          var spreadB = spread > 0 ? '+' + spread.toFixed(1) : spread < 0 ? '-' + Math.abs(spread).toFixed(1) : 'PK';
+          var aFav = spread > 0, bFav = spread < 0;
+
+          // Total O/U
+          var total = Math.round((projA + projB) * 2) / 2;
+
+          // Moneyline — standard conversion from spread
+          function spreadToML(spd) {
+            var s = Math.abs(spd);
+            if (s === 0) return 100;
+            // Favorite (negative spread)
+            if (spd < 0) {
+              // Each point of spread ≈ -15 to fav
+              var ml = -(100 + s * 15);
+              return Math.round(ml / 5) * 5;
+            } else {
+              // Underdog
+              var ml = 100 + s * 8;
+              return Math.round(ml / 5) * 5;
+            }
+          }
+          var mlA = aFav ? spreadToML(spread) : spreadToML(-spread);
+          var mlB = bFav ? spreadToML(spread) : spreadToML(-spread);
+          var mlAStr = aFav ? mlA.toString() : '+' + mlB;
+          var mlBStr = bFav ? mlB.toString() : '+' + mlA;
+          // Fix: swap if bFav
+          if (bFav) { mlAStr = '+' + Math.abs(spreadToML(spread)); mlBStr = spreadToML(-spread).toString(); }
+          if (!aFav && !bFav) { mlAStr = '-110'; mlBStr = '-110'; }
+
+          return '<div class="sb-lines">' +
+            '<div class="sb-lines-title"><span class="sb-lines-dot"></span>LIVE LINES · FANTASY SPORTSBOOK</div>' +
+            // Spread row
+            '<div class="sb-line-row">' +
+              '<div class="sb-line-val' + (aFav?' fav':' dog') + '">' + spreadA + '</div>' +
+              '<div class="sb-line-label">SPREAD</div>' +
+              '<div class="sb-line-val' + (bFav?' fav':' dog') + ' right">' + spreadB + '</div>' +
+            '</div>' +
+            // Total row
+            '<div class="sb-line-row">' +
+              '<div class="sb-line-val" style="font-size:13px;color:var(--text-dim)">o' + total.toFixed(1) + '</div>' +
+              '<div class="sb-line-label">TOTAL</div>' +
+              '<div class="sb-line-val right" style="font-size:13px;color:var(--text-dim)">u' + total.toFixed(1) + '</div>' +
+            '</div>' +
+            // Moneyline row
+            '<div class="sb-line-row">' +
+              '<div class="sb-line-val' + (aFav?' fav':' dog') + '">' + mlAStr + '</div>' +
+              '<div class="sb-line-label">MONEYLINE</div>' +
+              '<div class="sb-line-val' + (bFav?' fav':' dog') + ' right">' + mlBStr + '</div>' +
+            '</div>' +
+            '<div style="font-family:DM Mono,monospace;font-size:7px;color:var(--text-muted);margin-top:4px;text-align:center">Based on ' + (getProj(a) > 0 ? 'live projections' : '2025 PPG averages') + '</div>' +
+          '</div>';
+        })() +
+
         // Top 3 scorers with L.S. tags
         (hasScores && (top3ScorersA.length || top3ScorersB.length) ?
         '<div class="sb-section">' +
@@ -2132,9 +2234,11 @@ async function loadScoreboard(forceRefresh) {
         (function() {
           function tc(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
-            return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
+            return '<div class="sb-tape-grid">' +
+              '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
               '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
-              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
+              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>' +
+            '</div>';
           }
           const ppgA = parseFloat(currentPPG[tidA]||PPG_2025[tidA]);
           const ppgB = parseFloat(currentPPG[tidB]||PPG_2025[tidB]);
@@ -2142,13 +2246,15 @@ async function loadScoreboard(forceRefresh) {
           const ppgLabelB = (currentPPG[tidB]?currentPPG[tidB]:PPG_2025[tidB]) + " PPG<br><span style='font-size:8px;color:var(--text-dim)'>" + PPG_2025[tidB] + " in '25</span>";
           function tcPPG(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
-            return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
+            return '<div class="sb-tape-grid">' +
+              '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
               '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
-              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
+              '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>' +
+            '</div>';
           }
           return '<div class="sb-tape">' +
             '<div class="sb-tape-title">⚔️ TALE OF THE TAPE</div>' +
-            '<div>' +
+            '<div style="padding:0 2px">' +
               tcPPG(ppgLabelA, 'AVG PPG', ppgLabelB, ppgA > ppgB) +
               tc('#'+pwrRanks[tidA]+' · '+(tA?tA.ovr:'?')+' OVR', 'PWR · OVR', '#'+pwrRanks[tidB]+' · '+(tB?tB.ovr:'?')+' OVR', pwrRanks[tidA]<pwrRanks[tidB]) +
               tc(posRanks[tidA]?posRanks[tidA].QB:'?', 'QB Pos. Ranking', posRanks[tidB]?posRanks[tidB].QB:'?', parseInt((posRanks[tidA]?posRanks[tidA].QB:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].QB:'#9').replace('#',''))) +
