@@ -946,7 +946,7 @@ function buildRoster(){
       html+=`<div class="plr-row">
         <span class="plr-slot">${p.slot}</span>
         <span class="plr-pos tag ${pc2}">${p.pos||p.slot}</span>
-        <span class="plr-nm">${p.name}<span class="plr-nfl">${p.nfl}</span>${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-right:4px;vertical-align:middle;">R</span>':''}${(()=>{const sched=NFL_SCHEDULE[p.nfl];if(!sched||!sched.opp)return '';const prefix=sched.home?'vs':'at';return '<span style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-dim);margin-left:2px;vertical-align:middle">'+prefix+' <img src=\'https://sleepercdn.com/images/team_logos/nfl/'+sched.opp.toLowerCase()+'.jpg\' style=\'width:13px;height:13px;border-radius:2px;vertical-align:middle;margin-left:2px\' onerror=\'this.style.display=\"none\"\'/></span>';})()}</span>
+        <span class="plr-nm">${p.name}<span class="plr-nfl">${p.nfl}</span>${isRookie?'<span style="font-family:\'DM Mono\',monospace;font-size:8px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:3px;padding:0px 4px;margin-right:4px;vertical-align:middle;">R</span>':''}${(()=>{const sched=NFL_SCHEDULE[p.nfl];if(!sched||!sched.opp)return '';const prefix=sched.home?'vs':'at';const oppName=NFL_TEAM_NAMES[sched.opp]||sched.opp;return '<span style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-dim);margin-left:4px;vertical-align:middle">'+prefix+' '+oppName+'</span>';})()}</span>
         ${(p.ownershipHistory&&p.ownershipHistory.length>0)?'<span onclick="showOwnershipDetail(\''+p.name+'\',\''+p.nfl+'\',\''+p.ownershipHistory.join(',')+'\',\''+(p.ownershipTx?p.ownershipTx.how.replace(/\'/g,''):'')+'\''+',\''+(p.ownershipTx?p.ownershipTx.date:'')+'\')" style="cursor:pointer;display:inline-flex;gap:3px;vertical-align:middle;margin-right:10px;">'+p.ownershipHistory.map(ab=>'<span style="font-family:\'DM Mono\',monospace;font-size:7px;font-weight:700;color:var(--text-dim);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:0px 4px;">'+ab+'</span>').join('')+'</span>':''}
         ${(()=>{const s=p.injuryStatus||'';if(!s)return '';const cfg={'Out':['#ff4455','rgba(255,68,85,0.15)','OUT'],'Doubtful':['#ff8c42','rgba(255,140,66,0.15)','DOUBT'],'Questionable':['#f5c518','rgba(245,197,24,0.12)','QUES'],'IR':['#ff4455','rgba(255,68,85,0.15)','IR']};const col=cfg[s]||['#aaa','rgba(255,255,255,0.08)',s.toUpperCase()];return '<span style="font-family:DM Mono,monospace;font-size:8px;font-weight:700;color:'+col[0]+';background:'+col[1]+';border:1px solid '+col[0]+'44;border-radius:3px;padding:0px 5px;margin-right:4px;vertical-align:middle">'+col[2]+'</span>';})()}
         <span class="plr-age" style="color:${ageColor(p.age)}">Age ${p.age}</span>
@@ -1744,7 +1744,7 @@ async function loadScoreboard(forceRefresh) {
     // Fetch matchups + projections in parallel
     const [freshMatchups, projections, playersDb] = await Promise.all([
       matchups ? Promise.resolve(null) : sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&order_by=pts_ppr'),
       getPlayersDb()
     ]);
 
@@ -1860,13 +1860,20 @@ async function loadScoreboard(forceRefresh) {
     });
     window._allTimeRecMap = allTimeRec;
 
+    function getProjPts(pid) {
+      if (!projections || !pid || pid === '0') return 0;
+      const p = projections[pid];
+      if (!p) return 0;
+      // Handle both {pts_ppr: X} and {stats: {pts_ppr: X}} formats
+      if (p.pts_ppr !== undefined) return p.pts_ppr;
+      if (p.stats && p.stats.pts_ppr !== undefined) return p.stats.pts_ppr;
+      return 0;
+    }
     function getProj(entry) {
       if (!projections || !playersDb) return 0;
       let proj = 0;
       (entry.starters || []).forEach(pid => {
-        if (pid === '0') return;
-        const p = projections[pid];
-        if (p && p.pts_ppr) proj += p.pts_ppr;
+        proj += getProjPts(pid);
       });
       return Math.round(proj * 10) / 10;
     }
@@ -1901,11 +1908,10 @@ async function loadScoreboard(forceRefresh) {
       const starters = (entry.starters || []).filter(id => id !== '0');
       return starters
         .map(pid => {
-          const proj = projections[pid];
           const p = playersDb[pid];
           return {
             name: p ? (p.full_name || p.first_name + ' ' + p.last_name) : 'Unknown',
-            pts: proj ? Math.round((proj.pts_ppr || 0) * 10) / 10 : 0,
+            pts: Math.round(getProjPts(pid) * 10) / 10,
             actual: Math.round(((entry.players_points || {})[pid] || 0) * 10) / 10
           };
         })
@@ -1983,7 +1989,7 @@ async function loadScoreboard(forceRefresh) {
     function buildTapeCell(valA, label, valB, aWins) {
       const bWins = !aWins && valA !== valB;
       return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + valA + '</div>' +
-        '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
+        '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
         '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + valB + '</div>';
     }
 
@@ -2000,8 +2006,8 @@ async function loadScoreboard(forceRefresh) {
 
       const scoreA = Math.round((a.points || 0) * 100) / 100;
       const scoreB = Math.round((b.points || 0) * 100) / 100;
-      const projA = getProj(a);
-      const projB = getProj(b);
+      const projA = getProj(a) || PPG_2025[tidA] || 150;
+      const projB = getProj(b) || PPG_2025[tidB] || 150;
       const top3ScorersA = getTop3Scorers(a);
       const top3ScorersB = getTop3Scorers(b);
       const top3A = getTop3Proj(a);
@@ -2118,7 +2124,7 @@ async function loadScoreboard(forceRefresh) {
           function tc(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
             return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
-              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
+              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
               '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
           }
           const ppgA = parseFloat(currentPPG[tidA]||PPG_2025[tidA]);
@@ -2128,12 +2134,12 @@ async function loadScoreboard(forceRefresh) {
           function tcPPG(vA, label, vB, aWins) {
             const bWins = !aWins && String(vA) !== String(vB);
             return '<div style="font-size:11px;font-weight:700;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + vA + '</div>' +
-              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7">' + label + '</div>' +
+              '<div style="font-size:8px;color:var(--gold);text-align:center;letter-spacing:0.06em;white-space:nowrap;opacity:0.7;min-width:90px">' + label + '</div>' +
               '<div style="font-size:11px;font-weight:700;color:' + (bWins?'var(--gold)':'var(--text-dim)') + ';text-align:right">' + vB + '</div>';
           }
           return '<div class="sb-tape">' +
             '<div class="sb-tape-title">⚔️ TALE OF THE TAPE</div>' +
-            '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px 8px;align-items:center">' +
+            '<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px 8px;align-items:center;text-align:left">' +
               tcPPG(ppgLabelA, 'AVG PPG', ppgLabelB, ppgA > ppgB) +
               tc('#'+pwrRanks[tidA]+' · '+(tA?tA.ovr:'?')+' OVR', 'PWR · OVR', '#'+pwrRanks[tidB]+' · '+(tB?tB.ovr:'?')+' OVR', pwrRanks[tidA]<pwrRanks[tidB]) +
               tc(posRanks[tidA]?posRanks[tidA].QB:'?', 'QB Pos. Ranking', posRanks[tidB]?posRanks[tidB].QB:'?', parseInt((posRanks[tidA]?posRanks[tidA].QB:'#9').replace('#',''))<parseInt((posRanks[tidB]?posRanks[tidB].QB:'#9').replace('#',''))) +
@@ -2251,7 +2257,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
     const season = '2026';
     const [matchups, projections, playersDb] = await Promise.all([
       sleeperFetch('/league/' + LEAGUE_ID + '/matchups/' + week),
-      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular'),
+      sleeperFetch('/projections/nfl/' + season + '/' + week + '?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&order_by=pts_ppr'),
       getPlayersDb()
     ]);
 
@@ -2377,8 +2383,8 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       const nameB = pB ? (pB.full_name || pB.first_name + ' ' + pB.last_name) : '—';
       const scorePA = Math.round(((ptsA[pidA]||0)) * 10)/10;
       const scorePB = Math.round(((ptsB[pidB]||0)) * 10)/10;
-      const projPA = projections && projections[pidA] ? Math.round((projections[pidA].pts_ppr||0)*10)/10 : null;
-      const projPB = projections && projections[pidB] ? Math.round((projections[pidB].pts_ppr||0)*10)/10 : null;
+      const projPA = projections && pidA ? (function(){const v=getProjPts(pidA);return v>0?Math.round(v*10)/10:null;})() : null;
+      const projPB = projections && pidB ? (function(){const v=getProjPts(pidB);return v>0?Math.round(v*10)/10:null;})() : null;
 
       // Hot/cold
       const iconA = scorePA > 0 && projPA ? (scorePA/projPA >= 1.15 ? '🔥' : scorePA/projPA <= 0.85 ? '🧊' : '') : '';
@@ -2394,7 +2400,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
             '<span style="font-size:11px">' + iconA + '</span>' +
             (pA&&pA.injury_status&&pA.injury_status==='Out'?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.15);border:1px solid #ff445544;border-radius:2px;padding:0 3px">OUT</span>':'') +
           '</div>' +
-          '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + (function(){if(!pA)return '';const s=NFL_SCHEDULE[pA.team];if(!s||!s.opp)return '';return ' ' + (s.home?'vs':'at') + ' <img src="https://sleepercdn.com/images/team_logos/nfl/'+s.opp.toLowerCase()+'.jpg" style="width:12px;height:12px;border-radius:2px;vertical-align:middle;margin-left:2px" onerror="this.style.display=\'none\'"/>';})() + '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim)">' + (pA?pA.team||'FA':'') + (function(){if(!pA)return '';const s=NFL_SCHEDULE[pA.team];if(!s||!s.opp)return '';return ' '+(s.home?'vs':'at')+' '+(NFL_TEAM_NAMES[s.opp]||s.opp);})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrA + ';line-height:1.2">' + (scorePA>0?scorePA.toFixed(1):'—') + '</div>' +
           '<div style="font-size:8px;color:var(--text-dim)">' + (projPA?projPA+' proj':'') + '</div>' +
         '</div>' +
@@ -2409,7 +2415,7 @@ async function openLineup(rosterIdA, rosterIdB, week) {
             '<span style="font-size:11px">' + iconB + '</span>' +
             '<div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">' + nameB + (pB&&pB.years_exp===0?'<span style="font-family:DM Mono,monospace;font-size:7px;font-weight:700;color:#ff4455;background:rgba(255,68,85,0.12);border:1px solid rgba(255,68,85,0.3);border-radius:2px;padding:0 3px;margin-left:3px">R</span>':'') + '</div>' +
           '</div>' +
-          '<div style="font-size:9px;color:var(--text-dim);text-align:right">' + (pB?pB.team||'FA':'') + (function(){if(!pB)return '';const s=NFL_SCHEDULE[pB.team];if(!s||!s.opp)return '';return ' ' + (s.home?'vs':'at') + ' <img src="https://sleepercdn.com/images/team_logos/nfl/'+s.opp.toLowerCase()+'.jpg" style="width:12px;height:12px;border-radius:2px;vertical-align:middle;margin-left:2px" onerror="this.style.display=\'none\'"/>';})() + '</div>' +
+          '<div style="font-size:9px;color:var(--text-dim);text-align:right">' + (pB?pB.team||'FA':'') + (function(){if(!pB)return '';const s=NFL_SCHEDULE[pB.team];if(!s||!s.opp)return '';return ' '+(s.home?'vs':'at')+' '+(NFL_TEAM_NAMES[s.opp]||s.opp);})() + '</div>' +
           '<div style="font-size:14px;font-weight:700;color:' + clrB + ';line-height:1.2">' + (scorePB>0?scorePB.toFixed(1):'—') + '</div>' +
           '<div style="font-size:8px;color:var(--text-dim)">' + (projPB?projPB+' proj':'') + '</div>' +
         '</div>' +
@@ -2422,6 +2428,67 @@ async function openLineup(rosterIdA, rosterIdB, week) {
       '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);text-align:center;align-self:center">TOT</div>' +
       '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--text-dim);text-align:right">' + scoreB.toFixed(2) + '</div>' +
     '</div>';
+
+    // Position scoring breakdown
+    (function() {
+      // SLOTS: QB QB RB RB RB WR WR WR TE WRT WRT WRT K
+      const SLOT_MAP = ['QB','QB','RB','RB','RB','WR','WR','WR','TE','WRT','WRT','WRT','K'];
+      const groups = [
+        {label:'QBs',   slots:['QB'],         color:'#4a9eff'},
+        {label:'RBs',   slots:['RB'],         color:'#4caf72'},
+        {label:'WRs',   slots:['WR'],         color:'#e8904a'},
+        {label:'Flex',  slots:['WRT'],        color:'#a855f7'},
+        {label:'Other', slots:['TE','K'],     color:'#888'},
+      ];
+
+      function getGroupPts(starters, pts) {
+        const totals = {QB:0,RB:0,WR:0,WRT:0,TE:0,K:0};
+        starters.forEach((pid,i) => {
+          const slot = SLOT_MAP[i] || 'WRT';
+          totals[slot] = (totals[slot]||0) + (pts[pid]||0);
+        });
+        return totals;
+      }
+
+      const grpA = getGroupPts(startersA, ptsA);
+      const grpB = getGroupPts(startersB, ptsB);
+
+      html += '<div style="background:var(--surface);border-top:1px solid var(--border);padding:10px 12px">' +
+        '<div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:8px;text-align:center">POINTS BY POSITION</div>';
+
+      groups.forEach(g => {
+        const vA = Math.round(g.slots.reduce((s,sl) => s + (grpA[sl]||0), 0) * 10) / 10;
+        const vB = Math.round(g.slots.reduce((s,sl) => s + (grpB[sl]||0), 0) * 10) / 10;
+        const aWins = vA > vB;
+        const bWins = vB > vA;
+        const maxVal = Math.max(vA, vB, 1);
+        const barA = Math.round(vA / maxVal * 100);
+        const barB = Math.round(vB / maxVal * 100);
+
+        html += '<div style="display:grid;grid-template-columns:1fr 56px 1fr;align-items:center;gap:4px;margin-bottom:6px">' +
+          // Left side
+          '<div style="text-align:right">' +
+            '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:' + (aWins?'var(--gold)':'var(--text-dim)') + '">' + (vA > 0 ? vA.toFixed(1) : '—') + '</div>' +
+            '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px">' +
+              '<div style="height:4px;border-radius:2px;background:' + g.color + ';width:' + barA + '%;float:right;opacity:' + (aWins?'1':'0.4') + '"></div>' +
+            '</div>' +
+          '</div>' +
+          // Label
+          '<div style="text-align:center">' +
+            '<div style="font-family:DM Mono,monospace;font-size:7px;color:' + g.color + ';letter-spacing:0.08em;padding:2px 4px;background:' + g.color + '18;border-radius:3px">' + g.label + '</div>' +
+          '</div>' +
+          // Right side
+          '<div>' +
+            '<div style="font-family:Bebas Neue,sans-serif;font-size:14px;color:' + (bWins?'var(--gold)':'var(--text-dim)') + '">' + (vB > 0 ? vB.toFixed(1) : '—') + '</div>' +
+            '<div style="background:var(--border);border-radius:2px;height:4px;overflow:hidden;margin-top:2px">' +
+              '<div style="height:4px;border-radius:2px;background:' + g.color + ';width:' + barB + '%;opacity:' + (bWins?'1':'0.4') + '"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+
+      html += '</div>';
+    })();
 
     content.innerHTML = html;
 
