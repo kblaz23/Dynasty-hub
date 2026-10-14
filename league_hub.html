@@ -2471,6 +2471,11 @@ async function loadH2HData() {
     processMatchups(res2026, rMap2026);
     H2H_DATA = h2h;
     renderH2HDropdown();
+    // Update any Tale of the Tape H2H lines already rendered in the scoreboard
+    document.querySelectorAll('.sb-h2h-line').forEach(el => {
+      const a = el.dataset.a, b = el.dataset.b;
+      if (a && b) el.innerHTML = '<span style="color:var(--accent);font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.08em">H2H · </span>' + h2hSummaryLine(a, b);
+    });
   } catch(e) {
     console.warn('H2H load failed', e);
   }
@@ -2781,58 +2786,93 @@ async function loadScoreboard(forceRefresh) {
         .slice(0, 3);
     }
 
+    // Week 6 bye teams: CIN, DET, MIA, MIN
+    const WEEK6_BYES = {
+      'CIN': true, 'DET': true, 'MIA': true, 'MIN': true
+    };
+
+    function getInjuredStarters(tid) {
+      const team = TEAMS.find(t => t.id === tid);
+      if (!team) return [];
+      return (team.roster || []).filter(p =>
+        (p.type === 'starter' || p.type === 'ir') &&
+        (p.injuryStatus === 'Out' || p.injuryStatus === 'Questionable')
+      );
+    }
+
+    function getByePlayers(tid, week) {
+      if (week !== 6) return [];
+      const team = TEAMS.find(t => t.id === tid);
+      if (!team) return [];
+      return (team.roster || []).filter(p =>
+        p.type === 'starter' && WEEK6_BYES[p.nfl]
+      );
+    }
+
     function buildAnalysis(tidA, tidB, scoreA, scoreB, week) {
       const tA = TEAMS.find(t => t.id === tidA);
       const tB = TEAMS.find(t => t.id === tidB);
       if (!tA || !tB) return '';
-      const lines = [];
 
-      // Dynamic streak/record angle based on current season
-      const recA = tA.sleeperRecord ? tA.sleeperRecord.split('-') : null;
-      const recB = tB.sleeperRecord ? tB.sleeperRecord.split('-') : null;
+      // Week 6 hardcoded matchup narratives — personalized per matchup
+      const matchupKey = [tidA, tidB].sort().join('_');
+      const narratives = {
+        'lah_otto': 'Lah Kynasty posted a league-high score in Week 5 and comes in as the hottest team in the league — Allen + Gibbs is the most reliable floor in fantasy. But Ottomarion Empire has already knocked off two preseason top-3 teams. A win here would make it three. Otto gets Jared Goff and Jameson Williams back from DET\'s bye next week — but this week they\'re without them. Lah enters a -6.1% favorite on projections but Otto has made this league forget about record and rankings.',
+        'otto_lah': 'Lah Kynasty posted a league-high score in Week 5 and comes in as the hottest team in the league — Allen + Gibbs is the most reliable floor in fantasy. But Ottomarion Empire has already knocked off two preseason top-3 teams. A win here would make it three. Otto loses Goff + Jameson Williams to DET\'s Week 6 bye, forcing Bryce Young into the lineup. Lah enters favored but Otto has made this league forget about record and rankings.',
+        'miso_sandy': 'MisoSawC at Sandy Hook & Ladder is a clash of two title contenders. Sandy is the reigning champion and most complete roster in the league. Miso trades on Lamar + Chase + Bijan — an elite trio — but Lamar is Questionable with a missed game already on his ledger. If Lamar is limited, Darnold has to start. Sandy has Bowers healthy and active for the third straight week. Advantage Sandy if Lamar doesn\'t go full send.',
+        'sandy_miso': 'MisoSawC at Sandy Hook & Ladder is a clash of two title contenders. Sandy is the reigning champion and most complete roster in the league. Miso trades on Lamar + Chase + Bijan — an elite trio — but Lamar is Questionable with a missed game already. Sandy has Bowers healthy for the third straight week. Advantage Sandy if Lamar isn\'t at 100%.',
+        'amon_killacam': 'Amon Drugs vs killaCam is a battle of flawed contenders. killaCam is dealing with CeeDee Lamb out and Jefferson back from injury — but Jefferson on MIN\'s Week 6 bye means they lose him THIS week. Kyler Murray also sits for the MIN bye. Amon brings Hurts (Questionable) and a thin RB room — Swift + Warren isn\'t scaring anyone. This one could be ugly on both sides.',
+        'killacam_amon': 'killaCam vs Amon Drugs — killaCam is dealing with a Week 6 nightmare: CeeDee Lamb out, Jefferson on MIN\'s bye, and Murray also on bye. They\'re essentially running it back with McLaurin, Adams, and Skattebo. Amon has Hurts (Questionable) but McBride and ARSB are floor-setters. Amon is a surprising favorite here given the bye week chaos.',
+        'abab_nflzey': 'Ababineaux vs NFL Zey — two teams fighting to stay relevant at 1-4 and 3-2. Abab is trending up with McMillan breaking out but Ladd McConkey is out and Barkley is Questionable. NFLZey is dealing with their own chaos — Burrow and Addison both on MIN and CIN byes. Jordan Addison sits for MIN\'s bye. This is a critical game for both teams\' playoff pictures.',
+        'nflzey_abab': 'NFL Zey vs Ababineaux — NFLZey loses Joe Burrow AND Jordan Addison to CIN/MIN byes. Stafford will have to carry the QB load. Abab brings McMillan and a healthy Barkley (if he goes) but McConkey is out. Both teams are banged up. A win here is massive for the playoff picture.',
+      };
+
+      // Check for bye week impact
+      const byePlayersA = getByePlayers(tidA, week);
+      const byePlayersB = getByePlayers(tidB, week);
+      const injuredA = getInjuredStarters(tidA);
+      const injuredB = getInjuredStarters(tidB);
+
+      // Use hardcoded narrative if available
+      if (narratives[matchupKey]) {
+        let text = narratives[matchupKey];
+        return text;
+      }
+
+      // Dynamic fallback
+      const lines = [];
+      const recA = tA.sleeperRecord ? tA.sleeperRecord.split('-') : tA.record2026 ? tA.record2026.split('-') : null;
+      const recB = tB.sleeperRecord ? tB.sleeperRecord.split('-') : tB.record2026 ? tB.record2026.split('-') : null;
 
       if (recA && recB && week > 1) {
         const wA = parseInt(recA[0]), lA = parseInt(recA[1]);
         const wB = parseInt(recB[0]), lB = parseInt(recB[1]);
-        if (lA >= 2 && wA === 0) lines.push(teamNames[tidA] + ' is searching for their first win after a tough start to the season.');
-        else if (wA >= 2 && lA === 0) lines.push(teamNames[tidA] + ' comes in undefeated at ' + wA + '-0 — one of the hottest teams in the league.');
-        else if (lA >= 2) lines.push('After losing ' + lA + ' straight, ' + teamNames[tidA] + ' desperately needs a bounce-back performance here.');
-        else if (wA >= 2) lines.push(teamNames[tidA] + ' has won ' + wA + ' straight and is rolling heading into this matchup.');
-
-        if (lB >= 2 && wB === 0) lines.push(teamNames[tidB] + ' is also winless and needs this one badly.');
-        else if (wB >= 2 && lB === 0) lines.push(teamNames[tidB] + ' is equally hot at ' + wB + '-0 — this is a clash of unbeatens.');
-        else if (lB >= 2) lines.push(teamNames[tidB] + ' has also dropped ' + lB + ' in a row and needs to stop the bleeding.');
+        if (wA > lA && wA >= 3) lines.push(teamNames[tidA] + ' comes in hot at ' + wA + '-' + lA + ' as one of the surprise stories of the early season.');
+        else if (lA > wA && lA >= 3) lines.push(teamNames[tidA] + ' is ' + wA + '-' + lA + ' and needs a statement win to get back in the playoff picture.');
+        if (wB > lB && wB >= 3) lines.push(teamNames[tidB] + ' is equally impressive at ' + wB + '-' + lB + '.');
+        else if (lB > wB && lB >= 3) lines.push(teamNames[tidB] + ' is ' + wB + '-' + lB + ' and must stop the bleeding.');
       }
 
-      // High/low scorer context
-      if (week > 1) {
-        const ppgA = currentPPG[tidA] || PPG_2025[tidA];
-        const ppgB = currentPPG[tidB] || PPG_2025[tidB];
-        if (scoreA > 0 && scoreA > ppgA * 1.15) lines.push(teamNames[tidA] + ' is having a monster week — already tracking above their season average.');
-        else if (scoreA > 0 && scoreA < ppgA * 0.75) lines.push(teamNames[tidA] + ' is struggling offensively today, sitting well below their season average.');
-        if (scoreB > 0 && scoreB > ppgB * 1.15) lines.push(teamNames[tidB] + ' is outperforming expectations so far this week.');
+      // Bye week callouts
+      if (byePlayersA.length > 0) {
+        lines.push(teamNames[tidA] + ' loses ' + byePlayersA.map(p=>p.name).join(', ') + ' to Week ' + week + ' byes — a real hit to the lineup.');
       }
+      if (byePlayersB.length > 0) {
+        lines.push(teamNames[tidB] + ' is also short-handed with ' + byePlayersB.map(p=>p.name).join(', ') + ' on bye.');
+      }
+
+      // Injury callouts
+      const outA = injuredA.filter(p=>p.injuryStatus==='Out');
+      const questA = injuredA.filter(p=>p.injuryStatus==='Questionable');
+      if (outA.length) lines.push(outA.map(p=>p.name).join(', ') + ' is OUT for ' + teamNames[tidA] + ' — depth gets tested.');
+      if (questA.length) lines.push(questA.map(p=>p.name).join(', ') + ' is Questionable for ' + teamNames[tidA] + ' — a major watch heading into lock.');
 
       // Power ranking angle
       const pwrA = pwrRanks[tidA], pwrB = pwrRanks[tidB];
       if (Math.abs(pwrA - pwrB) >= 3) {
         const fav = pwrA < pwrB ? teamNames[tidA] : teamNames[tidB];
-        const dog = pwrA < pwrB ? teamNames[tidB] : teamNames[tidA];
-        lines.push(fav + ' is a clear power ranking favorite here but upsets have happened all season.');
+        lines.push(fav + ' is a clear power ranking favorite — but this league has proven rankings don\'t write the scoreboard.');
       }
-
-      // Position matchup edge
-      const prA = posRanks[tidA] || {}, prB = posRanks[tidB] || {};
-      const posNames = {QB:'QB',RB:'backfield',WR:'WR',TE:'TE'};
-      ['QB','RB','WR','TE'].forEach(pos => {
-        const rA = parseInt((prA[pos]||'#9').replace('#',''));
-        const rB = parseInt((prB[pos]||'#9').replace('#',''));
-        if (rA <= 2 && rB >= 6) lines.push(teamNames[tidA] + ' has the ' + prA[pos] + ' ' + posNames[pos] + ' room in the league — a major edge today.');
-        else if (rB <= 2 && rA >= 6) lines.push(teamNames[tidB] + ' counters with the ' + prB[pos] + ' ' + posNames[pos] + ' unit in the league.');
-      });
-
-      // All-time record
-      lines.push('All-time: ' + teamNames[tidA] + ' leads ' + (allTimeRec[tidA]||'?') + ' vs ' + (allTimeRec[tidB]||'?') + '.');
 
       return lines.slice(0, 3).join(' ');
     }
@@ -2979,9 +3019,9 @@ async function loadScoreboard(forceRefresh) {
               '<div class="sb-line-label">MONEYLINE</div>' +
               '<div class="sb-line-val' + (bFav?' fav':' dog') + ' right">' + mlBStr + '</div>' +
             '</div>' +
-            '<div style="font-family:DM Mono,monospace;font-size:7px;color:var(--text-dim);margin-top:6px;text-align:center;border-top:1px solid var(--border);padding-top:6px">' +
+            '<div class="sb-h2h-line" data-a="'+tidA+'" data-b="'+tidB+'" style="font-family:DM Mono,monospace;font-size:7px;color:var(--text-dim);margin-top:6px;text-align:center;border-top:1px solid var(--border);padding-top:6px">' +
               '<span style="color:var(--accent);font-family:DM Mono,monospace;font-size:8px;letter-spacing:0.08em">H2H · </span>' +
-              h2hSummaryLine(tidA, tidB) +
+              (H2H_DATA ? h2hSummaryLine(tidA, tidB) : '<span style="opacity:0.5">Loading series record...</span>') +
             '</div>' +
             '<div style="font-family:DM Mono,monospace;font-size:7px;color:var(--text-dim);margin-top:3px;text-align:center">Based on ' + (getProj(a) > 0 ? 'live projections' : '2026 PPG averages') + '</div>' +
           '</div>';
